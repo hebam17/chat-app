@@ -1,13 +1,13 @@
-#MERN STACK chat app
+# MERN STACK chat app
 
 ## Technologies
 
 - React
 - Node
-- mongodb
+- MongoDB
 - React router
 - Tailwind
-- jwt
+- JWT
 - and more
 
 ## What to expect
@@ -21,6 +21,6 @@
 
 ## Branches
 
-- main => will have all this features
-- authjwt => will have more advanced jwt auth system
+- main => will have all these features
+- authjwt => will have a more advanced JWT auth system
 - Router => will implement React router to the app

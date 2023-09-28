@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import axios from "axios";
+import { UserContext } from "../UserContext";
 
 export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const { setUsername: setLoggedInUsername, setId } = useContext(UserContext);
 
   const changeHandler = (e) => {
     if (e.target.name === "username") {
@@ -11,9 +14,17 @@ export default function Register() {
       setPassword(e.target.value);
     }
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const { data } = await axios.post("/register", { username, password });
+    setLoggedInUsername(username);
+    setId(data.id);
+  };
+
   return (
     <div className="bg-blue-50 h-screen flex items-center">
-      <form action="" className="w-64 mx-auto mb-12">
+      <form onSubmit={handleSubmit} className="w-64 mx-auto mb-12">
         <input
           type="text"
           name="username"
@@ -38,6 +49,9 @@ export default function Register() {
         >
           Register
         </button>
+        <div className="text-center mt-2">
+          Already a member <a href="login">Login here</a>
+        </div>
       </form>
     </div>
   );

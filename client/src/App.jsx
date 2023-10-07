@@ -1,17 +1,29 @@
 import Register from "./components/Register";
 import axios from "axios";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Route,
+  RouterProvider,
+} from "react-router-dom";
+import Login, { action as loginAction } from "./components/Login";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <div>Home</div>,
-  },
-  {
-    path: "/register",
-    element: <Register />,
-  },
-]);
+import ErrorMessage from "./components/ErrorMessage";
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <>
+      <Route path="/" element={<div>Home</div>} />
+      <Route path="/register" element={<Register />} />
+      <Route
+        path="/login"
+        element={<Login />}
+        action={loginAction}
+        errorElement={<ErrorMessage />}
+      />
+    </>
+  )
+);
 
 function App() {
   axios.defaults.baseURL = "http://localhost:8800";

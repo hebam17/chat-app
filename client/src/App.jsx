@@ -1,4 +1,4 @@
-import Register from "./components/Register";
+import Register, { action as registerAction } from "./components/Register";
 import axios from "axios";
 import {
   createBrowserRouter,
@@ -6,7 +6,7 @@ import {
   Route,
   RouterProvider,
 } from "react-router-dom";
-import Login, { action as loginAction } from "./components/Login";
+import Login from "./components/Login";
 
 import ErrorMessage from "./components/ErrorMessage";
 
@@ -14,13 +14,13 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       <Route path="/" element={<div>Home</div>} />
-      <Route path="/register" element={<Register />} />
       <Route
-        path="/login"
-        element={<Login />}
-        action={loginAction}
+        path="/register"
+        element={<Register />}
+        action={registerAction}
         errorElement={<ErrorMessage />}
       />
+      <Route path="/login" element={<Login />} />
     </>
   )
 );

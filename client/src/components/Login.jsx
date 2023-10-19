@@ -1,45 +1,53 @@
-import { useState } from "react";
-import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, Form, useActionData } from "react-router-dom";
+import Input from "./Input";
+import { loginValidation } from "../utils/validations";
+
+export const action = async ({ request }) => {
+  const data = await request.formData();
+  let ValidationErrors = loginValidation(data);
+  if (Object.keys(ValidationErrors).length === 0) {
+    console.log("empty");
+    // register backend request goes here
+    return { ValidationErrors };
+  } else {
+    console.log("errors occurs!");
+
+    return { ValidationErrors };
+  }
+};
+
+const inputs = [
+  {
+    id: "username",
+    type: "text",
+    inputName: "username",
+    placeholder: "Enter your username",
+    inputLabel: "Username",
+  },
+  {
+    id: "password",
+    type: "password",
+    inputName: "password",
+    placeholder: "Enter your password",
+    inputLabel: "Password",
+  },
+];
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-
-  const changeHandler = (e) => {
-    if (e.target.name === "username") {
-      setUsername(e.target.value);
-    } else {
-      setPassword(e.target.value);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const { data } = await axios.post("/register", { username, password });
-  };
+  const errorMessage = useActionData();
 
   return (
-    <div className="bg-blue-50 h-screen flex items-center">
-      <form onSubmit={handleSubmit} className="w-64 mx-auto mb-12">
-        <input
-          type="text"
-          name="username"
-          id="username"
-          value={username}
-          placeholder="username"
-          onChange={changeHandler}
-          className="block w-full rounded-md p-2 mb-2 border"
-        />
-        <input
-          type="password"
-          name="psw"
-          id="psw"
-          value={password}
-          placeholder="password"
-          onChange={changeHandler}
-          className="block w-full rounded-md p-2 mb-2 border"
-        />
+    <div className="bg-blue-50 h-screen flex items-center justify-center flex-col">
+      <h4 className="text-4xl text-center my-4 font-bold">Login</h4>
+
+      <Form method="post" className="w-full px-6 mb-12" replace>
+        {inputs.map((inputData) => (
+          <Input
+            {...inputData}
+            key={inputData.id}
+            errorMessage={errorMessage && errorMessage.ValidationErrors}
+          />
+        ))}
         <button
           type="submit"
           className="bg-blue-500 text-white block w-full rounded-md p-2"
@@ -55,7 +63,7 @@ export default function Login() {
             </Link>
           </span>
         </div>
-      </form>
+      </Form>
     </div>
   );
 }

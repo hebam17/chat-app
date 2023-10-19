@@ -6,7 +6,7 @@ import {
   Route,
   RouterProvider,
 } from "react-router-dom";
-import Login from "./components/Login";
+import Login, { action as loginAction } from "./components/Login";
 
 import ErrorMessage from "./components/ErrorMessage";
 
@@ -20,7 +20,12 @@ const router = createBrowserRouter(
         action={registerAction}
         errorElement={<ErrorMessage />}
       />
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={<Login />}
+        action={loginAction}
+        errorElement={<ErrorMessage />}
+      />
     </>
   )
 );

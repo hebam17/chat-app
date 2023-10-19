@@ -9,14 +9,11 @@ export const validation = (data) => {
   for (let [key, value] of data) {
     if (!value.trim()) {
       errors[key] = `${key} required!`;
-    }
-    if (value.trim().includes(" ")) {
+    } else if (value.trim().includes(" ")) {
       errors[key] = `You can't have a space in ${key}`;
-    }
-    if (key === "email" && !emailRegexp.test(value)) {
+    } else if (key === "email" && !emailRegexp.test(value)) {
       errors[key] = "This email format is not supported!";
-    }
-    if (key === "username" && specialCharsRegexp.test(value)) {
+    } else if (key === "username" && specialCharsRegexp.test(value)) {
       errors[key] = "No special characters allowed";
     }
   }
@@ -24,5 +21,23 @@ export const validation = (data) => {
   if (data.get("password") !== data.get("confirmPassword")) {
     errors["confirmPassword"] = "Password and confirm password should match!";
   }
+  return errors;
+};
+
+export const loginValidation = (data) => {
+  const errors = {};
+
+  const specialCharsRegexp = /[`!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/;
+
+  for (let [key, value] of data) {
+    if (!value.trim()) {
+      errors[key] = `${key} required!`;
+    } else if (value.trim().includes(" ")) {
+      errors[key] = `You can't have a space in ${key}`;
+    } else if (key === "username" && specialCharsRegexp.test(value)) {
+      errors[key] = "No special characters allowed";
+    }
+  }
+
   return errors;
 };

@@ -4,3 +4,16 @@
   box-sizing: border-box;
   font-family: "Poppins", sans-serif;
 }
+
+.disappear {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  margin: -1px;
+  white-space: nowrap;
+}
+
+.input {
+  background: none;
+}

@@ -41,3 +41,11 @@ export const loginValidation = (data) => {
 
   return errors;
 };
+
+export const ResetPasswordValidation = (data) => {
+  const errors = {};
+  if (data.get("password") !== data.get("confirmPassword")) {
+    errors["confirmPassword"] = "Password and confirm password should match!";
+  }
+  return errors;
+};

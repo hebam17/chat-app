@@ -9,6 +9,10 @@ import {
 import Login, { action as loginAction } from "./components/Login";
 
 import ErrorMessage from "./components/ErrorMessage";
+import PasswordRecovery from "./components/PasswordRecovery";
+import ResetPassword, {
+  action as ResetPasswordAction,
+} from "./components/ResetPassword";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -24,6 +28,18 @@ const router = createBrowserRouter(
         path="/login"
         element={<Login />}
         action={loginAction}
+        errorElement={<ErrorMessage />}
+      />
+      <Route
+        path="/recovery"
+        element={<PasswordRecovery />}
+        // action={loginAction}
+        errorElement={<ErrorMessage />}
+      />
+      <Route
+        path="/reset-password"
+        element={<ResetPassword />}
+        action={ResetPasswordAction}
         errorElement={<ErrorMessage />}
       />
     </>

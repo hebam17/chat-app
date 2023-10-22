@@ -13,7 +13,7 @@ export default function Input({
   }, [errorMessage]);
 
   return (
-    <div className="py-2">
+    <div className="my-2">
       <label htmlFor={id}>{inputLabel}</label>
       <input
         type={type}

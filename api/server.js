@@ -16,26 +16,13 @@ app.use(
   })
 );
 
+app.disable("x-powered-by");
+
 mongoose
   .connect(process.env.MONGO_URL)
   .catch((error) => console.log("ERROR:", error));
+
 const jwtSecret = process.env.JWT_SECRET;
-
-app.get("/test", (req, res) => {
-  res.json("test ok");
-});
-
-app.get("/profile", (req, res) => {
-  const token = req.cookies?.token;
-  if (token) {
-    jwt.verify(token, jwtSecret, {}, (err, userData) => {
-      if (err) throw err;
-      res.json(userData);
-    });
-  } else {
-    res.status(401).json("not authorized!");
-  }
-});
 
 app.post("/register", async (req, res) => {
   try {

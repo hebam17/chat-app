@@ -63,6 +63,12 @@ export default function Login() {
             </Link>
           </span>
         </div>
+
+        <div className="text-center py-4">
+          <Link to="/recovery" className="text-red-500 pl-1">
+            Forget password?
+          </Link>
+        </div>
       </Form>
     </div>
   );

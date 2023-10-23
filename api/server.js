@@ -4,6 +4,7 @@ const User = require("./models/User");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
+const authRouter = require("./router/authRoute");
 
 const app = express();
 require("dotenv").config();
@@ -17,6 +18,9 @@ app.use(
 );
 
 app.disable("x-powered-by");
+
+// ROUTES
+app.use("/api", authRouter);
 
 mongoose
   .connect(process.env.MONGO_URL)
@@ -39,5 +43,5 @@ app.post("/register", async (req, res) => {
 
 const port = process.env.PORT || 8800;
 app.listen(port, () => {
-  console.log(`server is running on port 8800!`);
+  console.log(`server is running on http://localhost:8800 !`);
 });

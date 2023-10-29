@@ -28,19 +28,6 @@ mongoose
 
 const jwtSecret = process.env.JWT_SECRET;
 
-app.post("/register", async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    const newUser = await User.create({ username, password });
-    jwt.sign({ userId: newUser.id }, jwtSecret, {}, (err, token) => {
-      res.cookie("token", token).status(201).json({ id: newUser._id });
-    });
-  } catch (err) {
-    console.log(err.message);
-    res.status(500).json("sorry an error occured");
-  }
-});
-
 const port = process.env.PORT || 8800;
 app.listen(port, () => {
   console.log(`server is running on http://localhost:8800 !`);

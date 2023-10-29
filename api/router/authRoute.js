@@ -13,12 +13,10 @@ router.route("/authentication").post((req, res) => {
   res.json("authentication route!");
 }); //authenticate user
 
-router.route("/login").post((req, res) => {
-  res.json("login route!");
-}); //login user
+router.route("/login").post(authControllers.login); //login user
 
 // GET ROUTES
-router.route("/user/:username").get(); //profile
+router.route("/user/:username").get(authControllers.getUser); //profile
 router.route("/generateOTP").get(); //generate random OTP
 router.route("/verifyOTP").get(); //verify generated OTP
 router.route("/createResetSession").get(); //reset all variables

@@ -25,7 +25,7 @@ router.route("/user/:username").get(authControllers.getUser); //profile
 router.route("/createResetSession").get(); //reset all variables
 
 // PUT ROUTES
-router.route(Auth, "/updateuser").put(authControllers.updateUser); //update user profile
-router.route("/resetPassword").put(); // set password
+router.route("/updateuser").put(Auth, authControllers.updateUser); //update user profile
+router.route("/resetPassword").put(authControllers.resetPassword); // reset password
 
 module.exports = router;

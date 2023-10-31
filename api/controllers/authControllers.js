@@ -146,9 +146,53 @@ const verifyOTP = async (req, res) => {
   return res.status(400).send({ error: "Invalide OTP" });
 };
 
+const createResetSession = async (req, res) => {
+  if (req.app.locals.resetSession) {
+    req.app.locals.resetSession = false;
+    return res.status(201).send({ error: "Access gruanted" });
+  }
+  return res.status(404).send({ error: "Session expired" });
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    if (!req.app.locals.resetSession)
+      return res.status(404).send({ error: "Session expired" });
+
+    const { username, password } = req.body;
+    User.findOne({ username })
+      .then((user) => {
+        bcrypt
+          .hash(password, 10)
+          .then((hashedPassword) => {
+            User.updateOne({ username }, { password: hashedPassword }).then(
+              (data) => {
+                req.app.locals.resetSession = false;
+                return res
+                  .status(201)
+                  .send({ message: "User updated Successfully!" });
+              }
+            );
+          })
+          .catch((error) => {
+            return res.status(500).send({
+              error: "Sorry an error happened, please try again later!",
+            });
+          });
+      })
+      .catch((error) => {
+        return res.status(404).send();
+      });
+  } catch (error) {
+    return res.status(401).send({ error });
+  }
+};
+
 exports.register = register;
 exports.login = login;
 exports.getUser = getUser;
 exports.updateUser = updateUser;
 exports.generateOTP = generateOTP;
 exports.verifyOTP = verifyOTP;
+exports.createResetSession = createResetSession;
+exports.resetPassword = resetPassword;

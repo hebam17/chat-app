@@ -10,9 +10,7 @@ router.route("/registerMail").post((req, res) => {
   res.json("registerMail route!");
 }); //send the email
 
-router.route("/authentication").post((req, res) => {
-  res.json("authentication route!");
-}); //authenticate user
+router.route("/authentication").post(authControllers.authenticate); //authenticate user
 
 router.route("/login").post(authControllers.login); //login user
 

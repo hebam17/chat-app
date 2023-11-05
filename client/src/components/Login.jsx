@@ -1,17 +1,24 @@
-import { Link, Form, useActionData } from "react-router-dom";
+import { Link, Form, useActionData, redirect } from "react-router-dom";
 import Input from "./Input";
 import { loginValidation } from "../utils/validations";
+import axios from "axios";
 
 export const action = async ({ request }) => {
   const data = await request.formData();
   let ValidationErrors = loginValidation(data);
   if (Object.keys(ValidationErrors).length === 0) {
-    console.log("empty");
     // register backend request goes here
-    return { ValidationErrors };
+    try {
+      const res = await axios.post("/login", {
+        username: data.get("username"),
+        email: data.get("email"),
+        password: data.get("password"),
+      });
+      return redirect("/");
+    } catch (error) {
+      return { retrunedRes: error.response.data.error };
+    }
   } else {
-    console.log("errors occurs!");
-
     return { ValidationErrors };
   }
 };
@@ -39,6 +46,10 @@ export default function Login() {
   return (
     <div className="bg-blue-50 h-screen flex items-center justify-center flex-col">
       <h4 className="text-4xl text-center my-4 font-bold">Login</h4>
+
+      <p className="text-red-600 text-lg">
+        {errorMessage && errorMessage.retrunedRes}
+      </p>
 
       <Form method="post" className="w-full px-6 mb-12" replace>
         {inputs.map((inputData) => (

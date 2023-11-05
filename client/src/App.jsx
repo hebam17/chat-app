@@ -47,7 +47,7 @@ const router = createBrowserRouter(
 );
 
 function App() {
-  axios.defaults.baseURL = "http://localhost:8800";
+  axios.defaults.baseURL = "http://localhost:8800/api";
   axios.defaults.withCredentials = true;
 
   return <RouterProvider router={router}></RouterProvider>;

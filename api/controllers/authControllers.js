@@ -32,7 +32,7 @@ const register = async (req, res) => {
       profile: profile || "",
     });
 
-    return res.status(201).json("User Register Successfully");
+    return res.status(201).send({ message: "User Register Successfully" });
   } catch (err) {
     return res.status(500).send(err.message);
   }
@@ -56,9 +56,7 @@ const login = async (req, res) => {
       .compare(password, user.password)
       .then((passwordCheck) => {
         if (!passwordCheck)
-          res
-            .status(500)
-            .send({ error: "Sorry an error occures please try again!" });
+          return res.status(404).send({ error: "Password doesn't match" });
 
         // Create jwt token
         const token = jwt.sign(
@@ -71,7 +69,7 @@ const login = async (req, res) => {
         );
 
         return res.status(200).send({
-          msg: "Login Successful",
+          message: "Login Successful",
           username: user.username,
           token,
         });
@@ -102,15 +100,15 @@ const updateUser = async (req, res) => {
   try {
     const { username } = req.user;
     if (username) {
-      const body = req.body;
+      const data = req.body;
 
-      const newUSer = await User.updateOne({ username }, body);
-      return res.status(201).send({ msg: "User updated Successfully!" });
+      const newUser = await User.updateOne({ username }, data);
+      return res.status(201).send({ message: "User updated Successfully!" });
     } else {
       return res.status(401).send({ error: "User not found!" });
     }
-  } catch (err) {
-    return res.status(401).send({ error: err });
+  } catch (error) {
+    return res.status(401).send({ error });
   }
 };
 
@@ -136,14 +134,19 @@ const generateOTP = async (req, res) => {
 };
 
 const verifyOTP = async (req, res) => {
-  const { code } = req.body;
-  console.log(req.app.locals);
-  if (parseInt(req.app.locals.OTP) === parseInt(code)) {
-    req.app.locals.OTP = null;
-    req.app.locals.resetSession = true;
-    return res.status(201).send({ msg: "Verify Successfully" });
+  const { username, code } = req.body;
+  try {
+    console.log(req.app.locals);
+    const user = await axios.findOne({ username });
+    if (!user) return res.status(404).send({ message: "No user was found!" });
+    if (user && parseInt(req.app.locals.OTP) === parseInt(code)) {
+      req.app.locals.OTP = null;
+      req.app.locals.resetSession = true;
+      return res.status(201).send({ message: "Verify Successfully" });
+    }
+  } catch (error) {
+    return res.status(400).send({ error: "Invalide OTP" });
   }
-  return res.status(400).send({ error: "Invalide OTP" });
 };
 
 const createResetSession = async (req, res) => {
@@ -188,6 +191,17 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const authenticate = async (req, res) => {
+  try {
+    const { username } = req.body;
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).send({ error: "User not found" });
+    res.status(200).end();
+  } catch (error) {
+    return res.status(404).send({ error: "Authentication error" });
+  }
+};
+
 exports.register = register;
 exports.login = login;
 exports.getUser = getUser;
@@ -196,3 +210,4 @@ exports.generateOTP = generateOTP;
 exports.verifyOTP = verifyOTP;
 exports.createResetSession = createResetSession;
 exports.resetPassword = resetPassword;
+exports.authenticate = authenticate;

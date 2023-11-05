@@ -1,18 +1,32 @@
 import { useRef } from "react";
-import { Form, Link, useActionData, useNavigation } from "react-router-dom";
+import {
+  Form,
+  Link,
+  redirect,
+  useActionData,
+  useNavigation,
+} from "react-router-dom";
 import { validation } from "../utils/validations";
 import Input from "./Input";
+import axios from "axios";
 
 export const action = async ({ request }) => {
   const data = await request.formData();
   let ValidationErrors = validation(data);
   if (Object.keys(ValidationErrors).length === 0) {
-    console.log("empty");
     // register backend request goes here
-    return { ValidationErrors };
-  } else {
-    console.log("errors occurs!");
 
+    try {
+      const res = await axios.post("/register", {
+        username: data.get("username"),
+        email: data.get("email"),
+        password: data.get("password"),
+      });
+      return redirect("/");
+    } catch (error) {
+      return { retrunedRes: error.response.data.error };
+    }
+  } else {
     return { ValidationErrors };
   }
 };
@@ -50,7 +64,6 @@ const inputs = [
 
 export default function Register() {
   const errorMessage = useActionData();
-  console.log(errorMessage);
   const userRef = useRef();
   const navigation = useNavigation();
 
@@ -60,6 +73,10 @@ export default function Register() {
         <h4 className="text-4xl text-center my-3 font-bold">
           Welcome to CHAT APP
         </h4>
+
+        <p className="text-red-600 text-lg">
+          {errorMessage && errorMessage.retrunedRes}
+        </p>
 
         <Form method="post" ref={userRef} className="py-4" replace>
           <div className="profile py-2">

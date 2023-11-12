@@ -137,14 +137,18 @@ const verifyOTP = async (req, res) => {
   const { username, code } = req.body;
   try {
     const user = await User.findOne({ username });
-    if (!user) return res.status(404).send({ message: "No user was found!" });
+    if (!user) return res.status(404).send({ error: "No user was found!" });
     if (user && parseInt(req.app.locals.OTP) === parseInt(code)) {
       req.app.locals.OTP = null;
       req.app.locals.resetSession = true;
       return res.status(201).send({ message: "Verify Successfully" });
+    } else {
+      return res.status(400).send({ error: "Invalide OTP" });
     }
   } catch (error) {
-    return res.status(400).send({ error: "Invalide OTP" });
+    return res
+      .status(400)
+      .send({ error: "An error occured, please try again later" });
   }
 };
 

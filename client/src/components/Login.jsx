@@ -1,4 +1,10 @@
-import { Link, Form, useActionData, redirect } from "react-router-dom";
+import {
+  Link,
+  Form,
+  useActionData,
+  redirect,
+  useNavigation,
+} from "react-router-dom";
 import Input from "./Input";
 import { loginValidation } from "../utils/validations";
 import axios from "axios";
@@ -14,7 +20,11 @@ export const action = async ({ request }) => {
         email: data.get("email"),
         password: data.get("password"),
       });
-      return redirect("/");
+      console.log(res);
+      const { token } = res.data;
+      localStorage.setItem("token", token);
+
+      return redirect("/?User logged in successfully");
     } catch (error) {
       return { retrunedRes: error.response.data.error };
     }
@@ -42,6 +52,7 @@ const inputs = [
 
 export default function Login() {
   const errorMessage = useActionData();
+  const navigation = useNavigation();
 
   return (
     <div className="bg-blue-50 h-screen flex items-center justify-center flex-col">
@@ -62,8 +73,9 @@ export default function Login() {
         <button
           type="submit"
           className="bg-blue-500 text-white block w-full rounded-md p-2"
+          disabled={navigation.state === "submitting"}
         >
-          Register
+          {navigation.state === "submitting" ? "Logging in ..." : "Login"}
         </button>
 
         <div className="text-center py-4">
@@ -76,7 +88,7 @@ export default function Login() {
         </div>
 
         <div className="text-center py-4">
-          <Link to="/recovery" className="text-red-500 pl-1">
+          <Link to="/recovery-email-send" className="text-red-500 pl-1">
             Forget password?
           </Link>
         </div>

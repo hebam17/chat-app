@@ -1,19 +1,29 @@
-import { useEffect } from "react";
-import { Form, useActionData } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Form, redirect, useActionData, useNavigate } from "react-router-dom";
 import Input from "./Input";
 import { ResetPasswordValidation } from "../utils/validations";
+import { resetPassword } from "../utils/apiRequests";
+import axios from "axios";
 
 export const action = async ({ request }) => {
-  const data = await request.formData();
-  let ValidationErrors = ResetPasswordValidation(data);
-  if (Object.keys(ValidationErrors).length === 0) {
-    console.log("empty");
-    // register backend request goes here
-    return { ValidationErrors };
-  } else {
-    console.log("errors occurs!");
+  const formData = await request.formData();
+  let ValidationErrors = ResetPasswordValidation(formData);
 
-    return { ValidationErrors };
+  try {
+    if (Object.keys(ValidationErrors).length === 0) {
+      // register backend request goes here
+      const username = new URL(request.url).searchParams.get("username");
+      const { status } = await resetPassword({
+        username,
+        password: formData.get("password"),
+      });
+      if (status === 201) console.log("updated");
+      return redirect("/login");
+    } else {
+      return { ValidationErrors };
+    }
+  } catch (error) {
+    return { message: error.message };
   }
 };
 
@@ -36,15 +46,32 @@ const inputs = [
 
 export default function ResetPassword() {
   const errorMessage = useActionData();
+  const [err, setErr] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    console.log(errorMessage);
-  }, [errorMessage]);
+    const checkSession = async () => {
+      try {
+        const res = await axios.get("/createResetSession");
+        if (res.status !== 201) return navigate("/recovery-email-send");
+      } catch (error) {
+        return navigate(
+          `/recovery-email-send?message=${error.response.data.error}`
+        );
+      }
+    };
+
+    checkSession().catch((err) => setErr(err));
+  }, []);
 
   return (
     <main className="flex flex-col justify-center items-center h-screen">
       <h1 className="text-4xl my-3">Reset password</h1>
       <h2 className="text-1xl">Enter the new password </h2>
+
+      <p className="text-red-600 text-center text-lg">
+        {(errorMessage && errorMessage.message) || err}
+      </p>
 
       <Form method="post">
         <div className="flex flex-col justify-center items-center">

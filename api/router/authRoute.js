@@ -2,13 +2,12 @@ const express = require("express");
 const router = express.Router();
 const authControllers = require("../controllers/authControllers");
 const { Auth, localOTP } = require("../middleware/userAuth");
+const registerMail = require("../controllers/mailer");
 
 // POST ROUTES
 router.route("/register").post(authControllers.register);
 
-router.route("/registerMail").post((req, res) => {
-  res.json("registerMail route!");
-}); //send the email
+router.route("/registerMail").post(registerMail); //send the email
 
 router.route("/authentication").post(authControllers.authenticate); //authenticate user
 
@@ -20,7 +19,7 @@ router.route("/verifyOTP").post(authControllers.verifyOTP); //verify generated O
 // GET ROUTES
 router.route("/user/:username").get(authControllers.getUser); //profile
 
-router.route("/createResetSession").get(); //reset all variables
+router.route("/createResetSession").get(authControllers.createResetSession); //reset all variables
 
 // PUT ROUTES
 router.route("/updateuser").put(Auth, authControllers.updateUser); //update user profile

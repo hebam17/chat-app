@@ -22,7 +22,9 @@ export const action = async ({ request }) => {
         email: data.get("email"),
         password: data.get("password"),
       });
-      return redirect("/");
+      return redirect(
+        "/login?message=User was registerd successfully,now login please!"
+      );
     } catch (error) {
       return { retrunedRes: error.response.data.error };
     }
@@ -69,10 +71,10 @@ export default function Register() {
 
   return (
     <div className="container">
-      <div className="flex px-6 justify-center flex-col align-center">
-        <h4 className="text-4xl text-center my-3 font-bold">
+      <div className="flex px-6 justify-center flex-col items-center">
+        <h1 className="text-4xl text-center my-3 font-bold">
           Welcome to CHAT APP
-        </h4>
+        </h1>
 
         <p className="text-red-600 text-lg">
           {errorMessage && errorMessage.retrunedRes}

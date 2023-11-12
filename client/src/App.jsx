@@ -11,13 +11,23 @@ import Login, { action as loginAction } from "./components/Login";
 import ErrorMessage from "./components/ErrorMessage";
 import PasswordRecovery from "./components/PasswordRecovery";
 import ResetPassword, {
-  action as ResetPasswordAction,
+  action as resetPasswordAction,
+  // loader as resetPasswordLoader,
 } from "./components/ResetPassword";
+import Home, { loader as homeLoader } from "./pages/Home";
+import RecoveryEmailSend, {
+  action as recoveryEmailSendAction,
+} from "./components/RecoveryEmailSend";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <>
-      <Route path="/" element={<div>Home</div>} />
+      <Route
+        path="/"
+        element={<Home />}
+        loader={homeLoader}
+        errorElement={<ErrorMessage />}
+      />
       <Route
         path="/register"
         element={<Register />}
@@ -31,6 +41,12 @@ const router = createBrowserRouter(
         errorElement={<ErrorMessage />}
       />
       <Route
+        path="/recovery-email-send"
+        element={<RecoveryEmailSend />}
+        action={recoveryEmailSendAction}
+        errorElement={<ErrorMessage />}
+      />
+      <Route
         path="/recovery"
         element={<PasswordRecovery />}
         // action={loginAction}
@@ -39,7 +55,8 @@ const router = createBrowserRouter(
       <Route
         path="/reset-password"
         element={<ResetPassword />}
-        action={ResetPasswordAction}
+        // loader={resetPasswordLoader}
+        action={resetPasswordAction}
         errorElement={<ErrorMessage />}
       />
     </>

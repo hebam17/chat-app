@@ -5,102 +5,64 @@ export const authenticate = async (username) => {
   try {
     return await axios.post("/authenticate", { username });
   } catch (error) {
-    return { error: "Username doesn't exist!" };
+    throw new Error(error.response.data.error);
   }
 };
 
 // getting user details
-export const getUser = async ({ username }) => {
+export const getUser = async (username) => {
   try {
     const { data } = await axios.get(`/user/${username}`);
     return data;
   } catch (error) {
-    return { error };
-  }
-};
-
-// register user
-export const registerUser = async (credentials) => {
-  try {
-    const {
-      data: { message },
-      status,
-    } = await axios.post("/register", credentials);
-
-    const { username, email } = credentials;
-
-    if (status === 201) {
-      await axios.post("/registerMail", {
-        username,
-        userEmail: email,
-        text: message,
-      });
-    }
-
-    return message;
-  } catch (error) {
-    throw new Error(error.message);
-  }
-};
-
-// login user
-export const loginUser = async ({ username, password }) => {
-  try {
-    if (username && password) {
-      const { data } = await axios.post("/login", { username, password });
-      return data;
-    }
-    throw new Error("Please provide username and password");
-  } catch (error) {
-    throw new Error("Email or password dosn't match");
+    throw new Error(error.response.data.error);
   }
 };
 
 // update user
 export const updateUser = async (data) => {
   try {
-    const token = await localStorage.getItem("token");
+    const token = localStorage.getItem("token");
     const { message } = await axios.put("/updateuser", data, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return message;
   } catch (error) {
-    throw new Error("couldn't update profile, please try again!");
+    throw new Error(error.response.data.error);
   }
 };
 
 // generate OTP
-export const generateOTP = async ({ username, email }) => {
+export const generateOTP = async (email) => {
   try {
     const {
-      data: { code },
+      data: { code, username },
       status,
-    } = await axios.post("/generateOTP", { username });
+    } = await axios.post("/generateOTP", { email });
 
     if (status === 201) {
       // send mail with the OTP
       let text = `Your password reset code is ${code}`;
-      await axios.post("/registerMail", {
-        username,
-        userEmail: email,
-        text,
-        subject: "Password reset code",
-      });
-
-      return code;
+      // await axios.post("/registerMail", {
+      //   username,
+      //   userEmail: email,
+      //   text,
+      //   subject: "Password reset code",
+      // });
+      return { code, username };
     }
   } catch (error) {
-    throw new Error(error.message);
+    throw new Error(error.response.data.error);
   }
 };
 
 // verify OTP
 export const verifyOTP = async ({ username, code }) => {
   try {
-    const { data, status } = await axios.get("/verifyOTP", { username, code });
+    const { data, status } = await axios.post("/verifyOTP", { username, code });
     return { data, status };
   } catch (error) {
-    throw new Error(error.message);
+    throw new Error(error.response.data.error);
   }
 };
 
@@ -113,6 +75,6 @@ export const resetPassword = async ({ username, password }) => {
     });
     return { data, status };
   } catch (error) {
-    throw new Error(error.message);
+    throw new Error(error.response.data.error);
   }
 };

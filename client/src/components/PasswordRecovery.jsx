@@ -1,20 +1,50 @@
 import { useEffect, useState } from "react";
+import { generateOTP, getUser, verifyOTP } from "../utils/apiRequests";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import axios from "axios";
 
 export default function PasswordRecovery() {
-  const [OPT, setOPT] = useState("");
+  const [OTP, setOTP] = useState("");
+  const [error, setError] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setOPT(e.target.value);
+    setOTP(e.target.value);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(OPT);
+    console.log(OTP);
+
+    try {
+      const username = searchParams.get("username");
+      const { status } = await verifyOTP({
+        username,
+        code: OTP,
+      });
+
+      if (status === 201) navigate(`/reset-password?username=${username}`);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const handleClick = async () => {
+    try {
+      console.log(searchParams.get("username"));
+      const user = await getUser(searchParams.get("username"));
+      console.log("user:", user);
+      const { code } = await generateOTP(user.email);
+      //  add feedback for sending the new OTP
+    } catch (error) {
+      return setError(error.message);
+    }
   };
 
   useEffect(() => {
-    console.log(OPT);
-  }, [OPT]);
+    console.log(OTP);
+  }, [OTP]);
 
   return (
     <main className="flex flex-col justify-center items-center h-screen">
@@ -22,12 +52,14 @@ export default function PasswordRecovery() {
         Enter the 6 digits sent to your email address
       </h1>
 
+      <p className="text-red-600 text-center text-lg">{error}</p>
+
       <form method="post" onSubmit={handleSubmit}>
         <div className="flex flex-col justify-center items-center">
           <input
             type="text"
-            name="opt"
-            id="opt"
+            name="otp"
+            id="otp"
             onChange={handleChange}
             placeholder="Enter the numbers here"
             className="w-50 my-2 p-2 rounded-md border border-gray-200 focus:border-blue-300 focus:outline-none "
@@ -43,7 +75,7 @@ export default function PasswordRecovery() {
         <div className="text-center py-4">
           <span className="text-gray-500">
             Cannot get the number?
-            <button to="/register" className="text-red-500 pl-1">
+            <button onClick={handleClick} className="text-red-500 pl-1">
               Resend
             </button>
           </span>

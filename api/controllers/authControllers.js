@@ -69,7 +69,7 @@ const login = async (req, res) => {
         );
 
         return res.status(200).send({
-          message: "Login Successful",
+          message: "Login Successfully",
           username: user.username,
           token,
         });
@@ -92,7 +92,7 @@ const getUser = async (req, res) => {
 
     return res.status(201).send(user);
   } catch (err) {
-    res.status(404).send({ error: "Cannot Find user data!" });
+    return res.status(404).send({ error: "Cannot Find user data!" });
   }
 };
 
@@ -113,13 +113,11 @@ const updateUser = async (req, res) => {
 };
 
 const generateOTP = async (req, res) => {
-  const { username } = req.query;
-  // const { email } = req.body;
+  const { email } = req.body;
   try {
-    // let user = await User.findOne({ username, email });
-    let user = await User.findOne({ username });
+    let user = await User.findOne({ email });
 
-    if (!user) res.status(404).send({ error: "Can't find user" });
+    if (!user) return res.status(404).send({ error: "Can't find user" });
 
     req.app.locals.OTP = otpGenerator.generate(6, {
       lowerCaseAlphabets: false,
@@ -127,7 +125,9 @@ const generateOTP = async (req, res) => {
       specialChars: false,
     });
 
-    return res.status(201).send({ code: req.app.locals.OTP });
+    return res
+      .status(201)
+      .send({ code: req.app.locals.OTP, username: user.username });
   } catch (error) {
     return res.status(404).send({ error: "Authentication Error" });
   }
@@ -136,8 +136,7 @@ const generateOTP = async (req, res) => {
 const verifyOTP = async (req, res) => {
   const { username, code } = req.body;
   try {
-    console.log(req.app.locals);
-    const user = await axios.findOne({ username });
+    const user = await User.findOne({ username });
     if (!user) return res.status(404).send({ message: "No user was found!" });
     if (user && parseInt(req.app.locals.OTP) === parseInt(code)) {
       req.app.locals.OTP = null;
@@ -151,8 +150,7 @@ const verifyOTP = async (req, res) => {
 
 const createResetSession = async (req, res) => {
   if (req.app.locals.resetSession) {
-    req.app.locals.resetSession = false;
-    return res.status(201).send({ error: "Access gruanted" });
+    return res.status(201).send({ flag: req.app.locals.resetSession });
   }
   return res.status(404).send({ error: "Session expired" });
 };
@@ -178,15 +176,18 @@ const resetPassword = async (req, res) => {
             );
           })
           .catch((error) => {
+            req.app.locals.resetSession = false;
             return res.status(500).send({
               error: "Sorry an error happened, please try again later!",
             });
           });
       })
       .catch((error) => {
+        req.app.locals.resetSession = false;
         return res.status(404).send();
       });
   } catch (error) {
+    req.app.locals.resetSession = false;
     return res.status(401).send({ error });
   }
 };

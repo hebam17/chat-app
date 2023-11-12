@@ -9,8 +9,8 @@ let nodeConfig = {
   port: 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: process.process.env.EMAIL, // generated ethereal user
-    pass: process.process.env.EMAIL_PASSWORD, // generated ethereal password
+    user: process.env.EMAIL, // generated ethereal user
+    pass: process.env.EMAIL_PASSWORD, // generated ethereal password
   },
 };
 

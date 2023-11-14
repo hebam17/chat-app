@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const authRouter = require("./router/authRoute");
+const ws = require("ws");
 
 const app = express();
 require("dotenv").config();
@@ -29,6 +30,13 @@ mongoose
 const jwtSecret = process.env.JWT_SECRET;
 
 const port = process.env.PORT || 8800;
-app.listen(port, () => {
-  console.log(`server is running on http://localhost:8800 !`);
+
+const server = app.listen(port, () => {
+  console.log(`server is running on http://localhost:${port} !`);
+});
+
+const wss = new ws.WebSocketServer({ server });
+wss.on("connection", (connection, req) => {
+  console.log(req.headers);
+  connection.send("hello");
 });

@@ -13,11 +13,13 @@ router.route("/authentication").post(authControllers.authenticate); //authentica
 
 router.route("/login").post(authControllers.login); //login user
 
+router.route("/logout").post(authControllers.logout); //logout user
+
 router.route("/generateOTP").post(localOTP, authControllers.generateOTP); //generate random OTP
 router.route("/verifyOTP").post(authControllers.verifyOTP); //verify generated OTP
 
 // GET ROUTES
-router.route("/user/:username").get(authControllers.getUser); //profile
+router.route("/profile").get(authControllers.getUser); //profile
 
 router.route("/createResetSession").get(authControllers.createResetSession); //reset all variables
 

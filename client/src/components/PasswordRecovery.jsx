@@ -31,22 +31,6 @@ export default function PasswordRecovery() {
     }
   };
 
-  const handleClick = async () => {
-    setError(null);
-    try {
-      console.log(searchParams.get("username"));
-      const user = await getUser(searchParams.get("username"));
-      console.log("user:", user);
-      if (user) {
-        const { code } = await generateOTP(user.email);
-        console.log(code);
-      }
-      //  add feedback for sending the new OTP
-    } catch (error) {
-      return setError(error.message);
-    }
-  };
-
   useEffect(() => {
     console.log(OTP);
   }, [OTP]);
@@ -80,7 +64,10 @@ export default function PasswordRecovery() {
       <div className="text-center py-4">
         <span className="text-gray-500">
           Cannot get the number?
-          <button onClick={handleClick} className="text-red-500 pl-1">
+          <button
+            onClick={() => navigate("/recovery-email-send")}
+            className="text-red-500 pl-1"
+          >
             Resend
           </button>
         </span>

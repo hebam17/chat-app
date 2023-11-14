@@ -10,9 +10,9 @@ export const authenticate = async (username) => {
 };
 
 // getting user details
-export const getUser = async (username) => {
+export const getUser = async () => {
   try {
-    const { data } = await axios.get(`/user/${username}`);
+    const { data } = await axios.get("/profile");
     return data;
   } catch (error) {
     throw new Error(error.response.data.error);
@@ -52,6 +52,7 @@ export const generateOTP = async (email) => {
       return { code, username };
     }
   } catch (error) {
+    console.log("error:", error);
     throw new Error(error.response.data.error);
   }
 };

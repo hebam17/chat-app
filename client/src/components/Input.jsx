@@ -8,10 +8,6 @@ export default function Input({
   errorMessage,
   ...others
 }) {
-  useEffect(() => {
-    console.log(errorMessage);
-  }, [errorMessage]);
-
   return (
     <div className="my-2">
       <label htmlFor={id}>{inputLabel}</label>

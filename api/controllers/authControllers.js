@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const otpGenerator = require("otp-generator");
+require("dotenv").config();
 
 // REGISTER
 const register = async (req, res) => {
@@ -32,7 +33,30 @@ const register = async (req, res) => {
       profile: profile || "",
     });
 
-    return res.status(201).send({ message: "User Register Successfully" });
+    // Create jwt token
+    const token = jwt.sign(
+      {
+        userId: newUser._id,
+        username: newUser.username,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" },
+      {},
+      (err, token) => {
+        if (err)
+          return res
+            .status(500)
+            .send({ error: "Sorry an error occured, please try again!" });
+
+        res
+          .cookie("token", token, { sameSite: "none", secure: true })
+          .status(201)
+          .send({
+            message: "User Register Successfully",
+            id: newUser._id,
+          });
+      }
+    );
   } catch (err) {
     return res.status(500).send(err.message);
   }
@@ -68,11 +92,13 @@ const login = async (req, res) => {
           { expiresIn: "24h" }
         );
 
-        return res.status(200).send({
-          message: "Login Successfully",
-          username: user.username,
-          token,
-        });
+        return res
+          .status(200)
+          .cookie("token", token, { sameSite: "none", secure: true })
+          .send({
+            message: "Login Successfully",
+            id: user._id,
+          });
       })
       .catch((err) =>
         res.status(400).send({ error: "Password doesn't match" })
@@ -82,17 +108,34 @@ const login = async (req, res) => {
   }
 };
 
-const getUser = async (req, res) => {
-  const { username } = req.params;
-  try {
-    if (!username) return res.status(501).send({ error: "Invalid username" });
+const logout = (req, res) => {
+  res.cookie("token", "", { sameSite: "none", secure: true }).json("ok");
+};
+// const getUser = async (req, res) => {
+//   const { username } = req.params;
+//   try {
+//     if (!username) return res.status(501).send({ error: "Invalid username" });
 
-    const user = await User.findOne({ username }).select("-password -_id");
-    if (!user) return res.status(501).send({ error: "Could't find the user" });
+//     const user = await User.findOne({ username }).select("-password -_id");
+//     if (!user) return res.status(501).send({ error: "Could't find the user" });
 
-    return res.status(201).send(user);
-  } catch (err) {
-    return res.status(404).send({ error: "Cannot Find user data!" });
+//     return res.status(201).send(user);
+//   } catch (err) {
+//     return res.status(404).send({ error: "Cannot Find user data!" });
+//   }
+// };
+
+const getUser = (req, res) => {
+  const token = req.cookies?.token;
+  if (token) {
+    jwt.verify(token, process.env.JWT_SECRET, {}, (err, userData) => {
+      if (err) return res.status(400).send({ error: err.message });
+      return res.send(userData);
+    });
+  } else {
+    return res
+      .status(401)
+      .send({ error: "you are not logged in, please login first" });
   }
 };
 
@@ -209,6 +252,7 @@ const authenticate = async (req, res) => {
 
 exports.register = register;
 exports.login = login;
+exports.logout = logout;
 exports.getUser = getUser;
 exports.updateUser = updateUser;
 exports.generateOTP = generateOTP;

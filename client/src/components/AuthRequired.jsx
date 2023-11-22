@@ -22,13 +22,13 @@ export default function AuthRequired() {
     }
   }, []);
 
-  if (!username)
-    return (
-      <Navigate
-        to={`/login?message=You must login first&redirectTo=${pathname}`}
-      />
-    );
+  // if (username) return <Outlet />;
 
+  // return (
+  //   <Navigate
+  //     to={`/login?message=You must login first&redirectTo=${pathname}`}
+  //   />
+  // );
   return <Outlet />;
 }
 
@@ -49,7 +49,8 @@ export function AuthDenied() {
     }
   }, []);
 
-  if (username) return <Navigate to=".." />;
+  // if (username) return <Navigate to=".." />;
 
-  if (!username) return <Outlet />;
+  // if (!username) return <Outlet />;
+  return <Outlet />;
 }

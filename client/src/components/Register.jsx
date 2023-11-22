@@ -22,6 +22,9 @@ export const action = async ({ request }) => {
         email: data.get("email"),
         password: data.get("password"),
       });
+
+      console.log("res:", res);
+
       return redirect(
         "/login?message=User was registerd successfully,now login please!"
       );

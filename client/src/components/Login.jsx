@@ -29,7 +29,7 @@ export const action = async ({ request }) => {
         email: data.get("email"),
         password: data.get("password"),
       });
-
+      console.log("Logged in successfully");
       return redirect(`${pathname}?message=User logged in successfully`);
     } catch (error) {
       return { retrunedRes: error.response.data.error };
@@ -60,10 +60,6 @@ export default function Login() {
   const errorMessage = useActionData();
   const navigation = useNavigation();
   const message = useLoaderData();
-
-  useEffect(() => {
-    console.log("message:", message);
-  }, [message]);
 
   return (
     <div className="bg-blue-50 h-screen flex items-center justify-center flex-col">

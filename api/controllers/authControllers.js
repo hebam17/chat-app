@@ -33,29 +33,15 @@ const register = async (req, res) => {
       profile: profile || "",
     });
 
-    // Create jwt token
-    const token = jwt.sign(
-      {
-        userId: newUser._id,
-        username: newUser.username,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" },
-      {},
-      (err, token) => {
-        if (err)
-          return res
-            .status(500)
-            .send({ error: "Sorry an error occured, please try again!" });
-
-        res
-          .cookie("token", token, { sameSite: "none", secure: true })
-          .status(201)
-          .send({
-            message: "User Register Successfully",
-            id: newUser._id,
-          });
-      }
+    // not sending token because the user will be redirected to the login page after registeration
+    return (
+      res
+        // .cookie("token", token, { sameSite: "none", secure: true })
+        .status(201)
+        .send({
+          message: "User Register Successfully",
+          id: newUser._id,
+        })
     );
   } catch (err) {
     return res.status(500).send(err.message);
@@ -111,19 +97,6 @@ const login = async (req, res) => {
 const logout = (req, res) => {
   res.cookie("token", "", { sameSite: "none", secure: true }).json("ok");
 };
-// const getUser = async (req, res) => {
-//   const { username } = req.params;
-//   try {
-//     if (!username) return res.status(501).send({ error: "Invalid username" });
-
-//     const user = await User.findOne({ username }).select("-password -_id");
-//     if (!user) return res.status(501).send({ error: "Could't find the user" });
-
-//     return res.status(201).send(user);
-//   } catch (err) {
-//     return res.status(404).send({ error: "Cannot Find user data!" });
-//   }
-// };
 
 const getUser = (req, res) => {
   const token = req.cookies?.token;

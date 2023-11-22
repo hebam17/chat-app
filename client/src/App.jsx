@@ -23,6 +23,7 @@ import RecoveryEmailSend, {
 import Chat, { loader as chatLoader } from "./pages/Chat";
 import AuthRequired, { AuthDenied } from "./components/AuthRequired";
 import Layout from "./components/Layout";
+import Contact from "./components/Contact";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -33,6 +34,12 @@ const router = createBrowserRouter(
             path="/"
             element={<Chat />}
             loader={chatLoader}
+            errorElement={<ErrorMessage />}
+          />
+          <Route
+            path="/contact/:username"
+            element={<Contact />}
+            // loader={chatLoader}
             errorElement={<ErrorMessage />}
           />
         </Route>

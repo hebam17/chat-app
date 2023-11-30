@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import Avatar from "../components/Avatar";
 import { UserContext } from "../context/UserContext";
 import Logo from "../components/Logo";
@@ -15,16 +15,13 @@ export default function Chat() {
   const [currentContact, setCurrentContact] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const msgRef = useRef();
 
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8800");
     setWs(ws);
     ws.addEventListener("message", handleMessage);
   }, []);
-
-  useEffect(() => {
-    console.log("messages:", messages);
-  }, [messages]);
 
   function handleMessage(e) {
     const msg = JSON.parse(e.data);
@@ -34,11 +31,7 @@ export default function Chat() {
       setMessages((prev) => [
         ...prev,
         {
-          sender: id,
-          recipient: currentContact,
-          text: msg.text,
-          id: msg.id,
-          isOur: false,
+          ...msg,
         },
       ]);
     }
@@ -64,8 +57,15 @@ export default function Chat() {
       })
     );
 
-    setMessages((prev) => [...prev, { text: newMessage, isOur: true }]);
+    setMessages((prev) => [
+      ...prev,
+      { text: newMessage, sender: id, recipient: currentContact },
+    ]);
     setNewMessage("");
+
+    const msgTextBox = msgRef.current;
+    // scroll to the current sented message
+    msgTextBox.scrollIntoView(false);
   };
 
   // remove the current user from his contactors list
@@ -97,7 +97,7 @@ export default function Chat() {
           </div>
         ))}
       </div>
-      <div className="flex flex-col bg-green-50 w-2/3  p-2">
+      <div className="flex flex-col bg-green-100 w-2/3 overflow-hidden p-2">
         <div className="flex-grow">
           {!currentContact && (
             <div className="flex h-full items-center justify-center">
@@ -106,16 +106,39 @@ export default function Chat() {
           )}
 
           {currentContact && (
-            <div>
-              {dupesFreeMessages.map((message, index) => (
-                <div key={index}>{message.text}</div>
-              ))}
+            <div className="h-full relative">
+              <div
+                id="message-container"
+                className="overflow-y-auto absolute inset-0 pb-2"
+              >
+                {dupesFreeMessages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={
+                      message.sender === id
+                        ? "text-left mr-5"
+                        : "text-right ml-5"
+                    }
+                  >
+                    <div
+                      className={` text-left inline-block p-2 my-2 rounded-md text-md ${
+                        message.sender === id
+                          ? "bg-green-500 text-white"
+                          : "bg-white text-gray-700"
+                      }`}
+                    >
+                      {message.text}
+                    </div>
+                  </div>
+                ))}
+                <div id="anchor" ref={msgRef}></div>
+              </div>
             </div>
           )}
         </div>
 
         {currentContact && (
-          <form className="flex gap-2" onSubmit={sendMessage}>
+          <form className="flex gap-2bg-white" onSubmit={sendMessage}>
             <input
               type="text"
               className="bg-white flex-grow border p-2 rounded-sm"

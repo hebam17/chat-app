@@ -21,3 +21,31 @@ input {
 button:disabled {
   cursor: not-allowed;
 }
+
+/* SCROLLBAR */
+*::-webkit-scrollbar {
+  width: 0.5rem;
+}
+
+*::-webkit-scrollbar-track {
+  background: whitesmoke;
+}
+
+*::-webkit-scrollbar-thumb {
+  @apply bg-green-500;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* auto scrolling the message container */
+
+#message-container * {
+  overflow-anchor: none;
+}
+
+#anchor {
+  overflow-anchor: auto;
+  height: 1px;
+}

@@ -1,8 +1,10 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import Avatar from "../components/Avatar";
 import { UserContext } from "../context/UserContext";
+import DisplayError from "../components/DisplayError";
 import Logo from "../components/Logo";
 import { unique } from "../utils/helpers";
+import axios from "axios";
 
 export const loader = async ({ request }) => {
   return new URL(request.url).searchParams.get("message");
@@ -13,15 +15,42 @@ export default function Chat() {
   const [onlineUsers, setOnlineUsers] = useState({});
   const { username, id } = useContext(UserContext);
   const [currentContact, setCurrentContact] = useState(null);
+  const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const msgRef = useRef();
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8800");
-    setWs(ws);
-    ws.addEventListener("message", handleMessage);
+    wsConnection();
   }, []);
+
+  let wsInstance = null;
+
+  // establishing a webSocket connection
+  const wsConnection = () => {
+    wsInstance = new WebSocket("ws://localhost:8800");
+    setWs(wsInstance);
+    wsInstance.addEventListener("message", handleMessage);
+    wsInstance.addEventListener("close", () => {
+      setTimeout(() => {
+        wsConnection();
+      }, 1000);
+    });
+  };
+
+  useEffect(() => {
+    if (currentContact) {
+      axios
+        .get(`/messages/${currentContact}`)
+        .then((res) => {
+          setMessages(res.data);
+        })
+        .catch((err) => {
+          console.log(err.response.data.error);
+          setError("Sorry an error occurred, please try again later!");
+        });
+    }
+  }, [currentContact]);
 
   function handleMessage(e) {
     const msg = JSON.parse(e.data);
@@ -59,11 +88,17 @@ export default function Chat() {
 
     setMessages((prev) => [
       ...prev,
-      { text: newMessage, sender: id, recipient: currentContact },
+      {
+        _id: Date.now(),
+        text: newMessage,
+        sender: id,
+        recipient: currentContact,
+      },
     ]);
     setNewMessage("");
 
     const msgTextBox = msgRef.current;
+
     // scroll to the current sented message
     msgTextBox.scrollIntoView(false);
   };
@@ -73,7 +108,7 @@ export default function Chat() {
   delete otherOnlineUsers[id];
 
   // remove message duplication from the message list
-  const dupesFreeMessages = unique(messages, "id");
+  const dupesFreeMessages = unique(messages, "_id");
 
   return (
     <div className="flex h-screen">
@@ -97,8 +132,10 @@ export default function Chat() {
           </div>
         ))}
       </div>
-      <div className="flex flex-col bg-green-100 w-2/3 overflow-hidden p-2">
+      <div className="flex flex-col bg-green-100 w-2/3 overflow-hidden py-2">
         <div className="flex-grow">
+          {error && <DisplayError error={error} />}
+
           {!currentContact && (
             <div className="flex h-full items-center justify-center">
               <div className="text-gray-400">&larr; Select a person</div>
@@ -109,11 +146,11 @@ export default function Chat() {
             <div className="h-full relative">
               <div
                 id="message-container"
-                className="overflow-y-auto absolute inset-0 pb-2"
+                className="overflow-y-auto absolute inset-0 p-2"
               >
-                {dupesFreeMessages.map((message, index) => (
+                {dupesFreeMessages.map((message) => (
                   <div
-                    key={index}
+                    key={message._id}
                     className={
                       message.sender === id
                         ? "text-left mr-5"
@@ -138,10 +175,10 @@ export default function Chat() {
         </div>
 
         {currentContact && (
-          <form className="flex gap-2bg-white" onSubmit={sendMessage}>
+          <form className="flex gap-2" onSubmit={sendMessage}>
             <input
               type="text"
-              className="bg-white flex-grow border p-2 rounded-sm"
+              className="flex-grow border bg-white p-2 rounded-sm"
               placeholder="Type your message here"
               name="message"
               value={newMessage}

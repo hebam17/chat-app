@@ -9,6 +9,7 @@ import {
 import { validation } from "../utils/validations";
 import Input from "./Input";
 import axios from "axios";
+import DisplayError from "./DisplayError";
 
 export const action = async ({ request }) => {
   const data = await request.formData();
@@ -79,9 +80,7 @@ export default function Register() {
           Welcome to CHAT APP
         </h1>
 
-        <p className="text-red-600 text-lg">
-          {errorMessage && errorMessage.retrunedRes}
-        </p>
+        <DisplayError error={errorMessage && errorMessage.retrunedRes} />
 
         <Form method="post" ref={userRef} className="py-4" replace>
           <div className="profile py-2">

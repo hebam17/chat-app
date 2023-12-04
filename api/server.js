@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const authRouter = require("./router/authRoute");
+const messagesRouter = require("./router/messagesRoute");
 const ws = require("ws");
 
 const app = express();
@@ -23,6 +24,7 @@ app.disable("x-powered-by");
 
 // ROUTES
 app.use("/api", authRouter);
+app.use("/api/messages", messagesRouter);
 
 mongoose
   .connect(process.env.MONGO_URL)
@@ -43,14 +45,11 @@ wss.on("connection", (connection, req) => {
     const tokenCookieString = cookies
       .split(";")
       .find((str) => str.startsWith("token="));
-    // console.log(tokenCookieString);
     if (tokenCookieString) {
       const token = tokenCookieString.split("=")[1];
       if (token) {
-        console.log(token);
         jwt.verify(token, process.env.JWT_SECRET, {}, (err, userData) => {
           if (err) throw err;
-          // console.log(userData);
           const { userId, username } = userData;
 
           connection.userId = userId;
@@ -91,7 +90,7 @@ wss.on("connection", (connection, req) => {
               text,
               sender: connection.userId,
               recipient,
-              id: messageDoc._id,
+              _id: messageDoc._id,
             })
           )
         );

@@ -10,6 +10,7 @@ import Input from "./Input";
 import { loginValidation } from "../utils/validations";
 import axios from "axios";
 import { useEffect } from "react";
+import DisplayError from "./DisplayError";
 
 export const loader = async ({ request }) => {
   return new URL(request.url).searchParams.get("message");
@@ -32,7 +33,7 @@ export const action = async ({ request }) => {
       console.log("Logged in successfully");
       return redirect(`${pathname}?message=User logged in successfully`);
     } catch (error) {
-      return { retrunedRes: error.response.data.error };
+      return { returnedRes: error.response.data.error };
     }
   } else {
     return { ValidationErrors };
@@ -65,9 +66,9 @@ export default function Login() {
     <div className="bg-blue-50 h-screen flex items-center justify-center flex-col">
       <h4 className="text-4xl text-center my-4 font-bold">Login</h4>
 
-      <p className="text-red-600 text-lg">
-        {(errorMessage && errorMessage.retrunedRes) || message}
-      </p>
+      <DisplayError
+        error={(errorMessage && errorMessage.returnedRes) || message}
+      />
 
       <Form method="post" className="w-full px-6 mb-12" replace>
         {inputs.map((inputData) => (

@@ -3,8 +3,6 @@ require("dotenv").config();
 
 const Auth = (req, res, next) => {
   try {
-    // get the token from the header
-    // const token = req.headers.authorization.split(" ")[1];
     const token = req.cookies?.token;
     if (token) {
       const decodedToken = jwt.verify(token, process.env.JWT_SECRET);

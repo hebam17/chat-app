@@ -1,4 +1,4 @@
-import Register, { action as registerAction } from "./components/Register";
+import Register, { action as registerAction } from "./pages/Register";
 import axios from "axios";
 import {
   createBrowserRouter,
@@ -9,7 +9,7 @@ import {
 import Login, {
   action as loginAction,
   loader as loginLoader,
-} from "./components/Login";
+} from "./pages/Login";
 
 import ErrorMessage from "./components/ErrorMessage";
 import PasswordRecovery from "./components/PasswordRecovery";

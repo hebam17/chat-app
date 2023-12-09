@@ -5,6 +5,7 @@ import DisplayError from "../components/DisplayError";
 import Logo from "../components/Logo";
 import { unique } from "../utils/helpers";
 import axios from "axios";
+import ContactUser from "../components/ContactUser";
 
 export const loader = async ({ request }) => {
   return new URL(request.url).searchParams.get("message");
@@ -13,6 +14,7 @@ export const loader = async ({ request }) => {
 export default function Chat() {
   const [ws, setWs] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState({});
+  const [offlineUsers, setOfflineUsers] = useState({});
   const { username, id } = useContext(UserContext);
   const [currentContact, setCurrentContact] = useState(null);
   const [error, setError] = useState(null);
@@ -51,6 +53,22 @@ export default function Chat() {
         });
     }
   }, [currentContact]);
+
+  useEffect(() => {
+    axios.get("/users").then((res) => {
+      const offlineUsersArr = res.data.filter((user) => {
+        return !(user._id in onlineUsers);
+      });
+
+      const offlineUsers = {};
+
+      offlineUsersArr.forEach(({ _id, username }) => {
+        offlineUsers[_id] = username;
+      });
+
+      setOfflineUsers(offlineUsers);
+    });
+  }, [onlineUsers]);
 
   function handleMessage(e) {
     const msg = JSON.parse(e.data);
@@ -115,21 +133,25 @@ export default function Chat() {
       <div className="bg-white w-1/3">
         <Logo />
         {Object.keys(otherOnlineUsers).map((userId) => (
-          <div
+          <ContactUser
             key={userId}
-            className={`flex items-center gap-2 border-b border-gray-100 cursor-pointer ${
-              userId === currentContact && "bg-green-50"
-            }`}
-            onClick={() => setCurrentContact(userId)}
-          >
-            {userId === currentContact && (
-              <div className="p-1 bg-green-500 h-12 rounded-r-sm"></div>
-            )}
-            <div className="flex gap-2 pl-4 items-center">
-              <Avatar username={onlineUsers[userId]} userId={userId} />
-              <span className="text-gray-800">{onlineUsers[userId]}</span>
-            </div>
-          </div>
+            userId={userId}
+            online={true}
+            username={otherOnlineUsers[userId]}
+            handleClick={setCurrentContact}
+            selected={userId === currentContact}
+          />
+        ))}
+
+        {Object.keys(offlineUsers).map((userId) => (
+          <ContactUser
+            key={userId}
+            userId={userId}
+            online={false}
+            username={offlineUsers[userId]}
+            handleClick={setCurrentContact}
+            selected={userId === currentContact}
+          />
         ))}
       </div>
       <div className="flex flex-col bg-green-100 w-2/3 overflow-hidden py-2">
@@ -148,6 +170,11 @@ export default function Chat() {
                 id="message-container"
                 className="overflow-y-auto absolute inset-0 p-2"
               >
+                {dupesFreeMessages.length === 0 && (
+                  <div className="flex h-full items-center justify-center">
+                    <div className="text-gray-400">&larr; Start chat</div>
+                  </div>
+                )}
                 {dupesFreeMessages.map((message) => (
                   <div
                     key={message._id}
@@ -209,3 +236,5 @@ export default function Chat() {
     </div>
   );
 }
+
+// 4:19h

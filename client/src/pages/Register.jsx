@@ -7,9 +7,9 @@ import {
   useNavigation,
 } from "react-router-dom";
 import { validation } from "../utils/validations";
-import Input from "./Input";
+import Input from "../components/Input";
 import axios from "axios";
-import DisplayError from "./DisplayError";
+import DisplayError from "../components/DisplayError";
 
 export const action = async ({ request }) => {
   const data = await request.formData();

@@ -40,6 +40,37 @@ const server = app.listen(port, () => {
 
 const wss = new ws.WebSocketServer({ server });
 wss.on("connection", (connection, req) => {
+  connection.isAlive = true;
+
+  connection.timer = setInterval(() => {
+    connection.ping();
+
+    connection.disconnectionTimer = setTimeout(() => {
+      connection.isAlive = false;
+      connection.terminate();
+      sendingOnlinesList();
+    }, 1000);
+  }, 5000);
+
+  const sendingOnlinesList = () => {
+    const clients = [...wss.clients];
+    clients.forEach((client) => {
+      client.send(
+        JSON.stringify({
+          online: clients.map((c) => ({
+            userId: c.userId,
+            username: c.username,
+          })),
+        })
+      );
+    });
+  };
+
+  connection.on("pong", () => {
+    clearTimeout(connection.disconnectionTimer);
+  });
+
+  // get info from cookies
   const cookies = req.headers?.cookie;
   if (cookies) {
     const tokenCookieString = cookies
@@ -60,17 +91,7 @@ wss.on("connection", (connection, req) => {
   }
 
   // Send the online users list to every online user
-  const clients = [...wss.clients];
-  clients.forEach((client) => {
-    client.send(
-      JSON.stringify({
-        online: clients.map((c) => ({
-          userId: c.userId,
-          username: c.username,
-        })),
-      })
-    );
-  });
+  sendingOnlinesList();
 
   connection.on("message", async (message) => {
     const messageData = JSON.parse(message.toString());
@@ -97,3 +118,7 @@ wss.on("connection", (connection, req) => {
     }
   });
 });
+
+// wss.on("close", (data) => {
+//   console.log("disconnected", data);
+// });

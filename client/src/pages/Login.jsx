@@ -6,11 +6,11 @@ import {
   useNavigation,
   useLoaderData,
 } from "react-router-dom";
-import Input from "./Input";
+import Input from "../components/Input";
 import { loginValidation } from "../utils/validations";
 import axios from "axios";
 import { useEffect } from "react";
-import DisplayError from "./DisplayError";
+import DisplayError from "../components/DisplayError";
 
 export const loader = async ({ request }) => {
   return new URL(request.url).searchParams.get("message");

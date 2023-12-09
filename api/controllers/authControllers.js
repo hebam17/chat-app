@@ -222,6 +222,13 @@ const authenticate = async (req, res) => {
   }
 };
 
+// get all users
+const getAllUsers = async (req, res) => {
+  const users = await User.find({}, { _id: 1, username: 1 });
+
+  return res.json(users);
+};
+
 exports.register = register;
 exports.login = login;
 exports.logout = logout;
@@ -232,3 +239,4 @@ exports.verifyOTP = verifyOTP;
 exports.createResetSession = createResetSession;
 exports.resetPassword = resetPassword;
 exports.authenticate = authenticate;
+exports.getAllUsers = getAllUsers;

@@ -13,7 +13,7 @@ router.route("/authentication").post(authControllers.authenticate); //authentica
 
 router.route("/login").post(authControllers.login); //login user
 
-router.route("/logout").post(authControllers.logout); //logout user
+router.route("/logout").post(Auth, authControllers.logout); //logout user
 
 router.route("/generateOTP").post(localOTP, authControllers.generateOTP); //generate random OTP
 router.route("/verifyOTP").post(authControllers.verifyOTP); //verify generated OTP

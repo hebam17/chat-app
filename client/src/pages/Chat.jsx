@@ -15,7 +15,7 @@ export default function Chat() {
   const [ws, setWs] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState({});
   const [offlineUsers, setOfflineUsers] = useState({});
-  const { username, id } = useContext(UserContext);
+  const { username, setUsername, id, setId } = useContext(UserContext);
   const [currentContact, setCurrentContact] = useState(null);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
@@ -121,6 +121,18 @@ export default function Chat() {
     msgTextBox.scrollIntoView(false);
   };
 
+  // log user out
+  const logout = async () => {
+    try {
+      await axios.post("/logout");
+      setWs(null);
+      setId(null);
+      setUsername(null);
+    } catch (error) {
+      console.log(error.response.data.error);
+    }
+  };
+
   // remove the current user from his contactors list
   const otherOnlineUsers = { ...onlineUsers };
   delete otherOnlineUsers[id];
@@ -130,29 +142,56 @@ export default function Chat() {
 
   return (
     <div className="flex h-screen">
-      <div className="bg-white w-1/3">
-        <Logo />
-        {Object.keys(otherOnlineUsers).map((userId) => (
-          <ContactUser
-            key={userId}
-            userId={userId}
-            online={true}
-            username={otherOnlineUsers[userId]}
-            handleClick={setCurrentContact}
-            selected={userId === currentContact}
-          />
-        ))}
+      <div className="bg-white w-1/3 flex flex-col">
+        <div className="flex-grow">
+          <Logo />
+          {Object.keys(otherOnlineUsers).map((userId) => (
+            <ContactUser
+              key={userId}
+              userId={userId}
+              online={true}
+              username={otherOnlineUsers[userId]}
+              handleClick={setCurrentContact}
+              selected={userId === currentContact}
+            />
+          ))}
 
-        {Object.keys(offlineUsers).map((userId) => (
-          <ContactUser
-            key={userId}
-            userId={userId}
-            online={false}
-            username={offlineUsers[userId]}
-            handleClick={setCurrentContact}
-            selected={userId === currentContact}
-          />
-        ))}
+          {Object.keys(offlineUsers).map((userId) => (
+            <ContactUser
+              key={userId}
+              userId={userId}
+              online={false}
+              username={offlineUsers[userId]}
+              handleClick={setCurrentContact}
+              selected={userId === currentContact}
+            />
+          ))}
+        </div>
+
+        <div className="p-2 text-center flex gap-2 justify-center items-center">
+          <span className="mr-2 text-sm text-gray-600 flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="w-4 h-4"
+            >
+              <path
+                fillRule="evenodd"
+                d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                clipRule="evenodd"
+              />
+            </svg>
+
+            {username}
+          </span>
+          <button
+            onClick={logout}
+            className="text-sm text-gray-500 bg-green-100 py-2 px-3 border rounded-md"
+          >
+            Logout
+          </button>
+        </div>
       </div>
       <div className="flex flex-col bg-green-100 w-2/3 overflow-hidden py-2">
         <div className="flex-grow">
@@ -236,5 +275,3 @@ export default function Chat() {
     </div>
   );
 }
-
-// 4:19h

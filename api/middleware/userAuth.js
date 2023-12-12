@@ -10,9 +10,11 @@ const Auth = (req, res, next) => {
       req.user = decodedToken;
 
       next();
+    } else {
+      return res.status(401).send({ error: "You are already logged out!" });
     }
   } catch (error) {
-    res.status(401).send({ error: "You are not authorized!" });
+    return res.status(401).send({ error: "You are not authorized!" });
   }
 };
 

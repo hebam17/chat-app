@@ -47,10 +47,16 @@ wss.on("connection", (connection, req) => {
 
     connection.disconnectionTimer = setTimeout(() => {
       connection.isAlive = false;
+      clearInterval(connection.timer);
       connection.terminate();
       sendingOnlinesList();
+      console.log("dead");
     }, 1000);
   }, 5000);
+
+  connection.on("pong", () => {
+    clearTimeout(connection.disconnectionTimer);
+  });
 
   const sendingOnlinesList = () => {
     const clients = [...wss.clients];
@@ -65,10 +71,6 @@ wss.on("connection", (connection, req) => {
       );
     });
   };
-
-  connection.on("pong", () => {
-    clearTimeout(connection.disconnectionTimer);
-  });
 
   // get info from cookies
   const cookies = req.headers?.cookie;
@@ -119,6 +121,6 @@ wss.on("connection", (connection, req) => {
   });
 });
 
-// wss.on("close", (data) => {
-//   console.log("disconnected", data);
-// });
+wss.on("close", (data) => {
+  console.log("disconnected", data);
+});

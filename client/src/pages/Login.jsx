@@ -33,7 +33,11 @@ export const action = async ({ request }) => {
       console.log("Logged in successfully");
       return redirect(`${pathname}?message=User logged in successfully`);
     } catch (error) {
-      return { returnedRes: error.response.data.error };
+      return {
+        returnedRes:
+          error?.response?.data.error ||
+          "Sorry, an error occurred, please try again later!",
+      };
     }
   } else {
     return { ValidationErrors };

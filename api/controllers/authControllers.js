@@ -89,7 +89,9 @@ const login = async (req, res) => {
         res.status(400).send({ error: "Password doesn't match" })
       );
   } catch (err) {
-    return res.status(500).send(err.message);
+    return res
+      .status(500)
+      .send({ error: "Sorry, an error occured,please try again later!" });
   }
 };
 

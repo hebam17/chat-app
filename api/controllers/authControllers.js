@@ -91,7 +91,7 @@ const login = async (req, res) => {
   } catch (err) {
     return res
       .status(500)
-      .send({ error: "Sorry, an error occured,please try again later!" });
+      .send({ error: "Sorry, an error occured, please try again later!" });
   }
 };
 

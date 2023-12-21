@@ -8,9 +8,12 @@ const cors = require("cors");
 const authRouter = require("./router/authRoute");
 const messagesRouter = require("./router/messagesRoute");
 const ws = require("ws");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 require("dotenv").config();
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -23,6 +26,8 @@ app.use(
 app.disable("x-powered-by");
 
 // ROUTES
+// set the static files directory
+app.use("/api/uploads", express.static(path.join(__dirname, "/uploads")));
 app.use("/api", authRouter);
 app.use("/api/messages", messagesRouter);
 
@@ -97,12 +102,31 @@ wss.on("connection", (connection, req) => {
 
   connection.on("message", async (message) => {
     const messageData = JSON.parse(message.toString());
-    const { recipient, text } = messageData;
-    if (recipient && text) {
+
+    const { recipient, text, file } = messageData;
+    // console.log(messageData);
+    console.log("file:", file);
+    let filename = null;
+
+    if (file) {
+      const nameArr = file.filename.split(".");
+      const ext = nameArr[nameArr.length - 1];
+      filename = Date.now() + `.${ext}`;
+      const filePath = __dirname + "/uploads/" + filename;
+      // console.log(filePath);
+      const fileBuffer = Buffer.from(file.data.split(",")[1], "base64");
+      fs.writeFile(filePath, fileBuffer, (err) => {
+        if (err) console.log("err:", err);
+        console.log("done!");
+      });
+    }
+
+    if (recipient && (text || file)) {
       const messageDoc = await Message.create({
         sender: connection.userId,
         recipient,
-        text,
+        text: text,
+        file: filename || null,
       });
 
       [...wss.clients]
@@ -110,10 +134,11 @@ wss.on("connection", (connection, req) => {
         .forEach((user) =>
           user.send(
             JSON.stringify({
-              text,
+              text: text,
               sender: connection.userId,
               recipient,
               _id: messageDoc._id,
+              file: filename || null,
             })
           )
         );

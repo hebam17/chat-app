@@ -6,6 +6,7 @@ import Logo from "../components/Logo";
 import { unique } from "../utils/helpers";
 import axios from "axios";
 import ContactUser from "../components/ContactUser";
+import fs from "fs";
 
 export const loader = async ({ request }) => {
   return new URL(request.url).searchParams.get("message");
@@ -48,7 +49,7 @@ export default function Chat() {
           setMessages(res.data);
         })
         .catch((err) => {
-          console.log(err.response.data.error);
+          console.log(err.response?.data.error);
           setError("Sorry an error occurred, please try again later!");
         });
     }
@@ -95,24 +96,49 @@ export default function Chat() {
     setOnlineUsers(users);
   };
 
-  const sendMessage = (e) => {
-    e.preventDefault();
-    ws.send(
-      JSON.stringify({
-        recipient: currentContact,
-        text: newMessage,
-      })
-    );
+  const sendMessage = (e, file = null) => {
+    if (e) {
+      e.preventDefault();
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        _id: Date.now(),
-        text: newMessage,
-        sender: id,
-        recipient: currentContact,
-      },
-    ]);
+      ws.send(
+        JSON.stringify({
+          recipient: currentContact,
+          text: newMessage,
+          file,
+        })
+      );
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          _id: Date.now(),
+          text: newMessage,
+          sender: id,
+          recipient: currentContact,
+          file: null,
+        },
+      ]);
+    }
+
+    if (file) {
+      ws.send(
+        JSON.stringify({
+          recipient: currentContact,
+          text: newMessage,
+          file,
+        })
+      );
+
+      axios
+        .get(`/messages/${currentContact}`)
+        .then((res) => {
+          setMessages(res.data);
+        })
+        .catch(() => {
+          setError("Sorry an error occurred, please try again later!");
+        });
+    }
+
     setNewMessage("");
 
     const msgTextBox = msgRef.current;
@@ -120,6 +146,17 @@ export default function Chat() {
     // scroll to the current sented message
     msgTextBox.scrollIntoView(false);
   };
+
+  function sendFile(ev) {
+    const reader = new FileReader();
+    reader.readAsDataURL(ev.target.files[0]);
+    reader.onload = () => {
+      sendMessage(null, {
+        filename: ev.target.files[0].name,
+        data: reader.result,
+      });
+    };
+  }
 
   // log user out
   const logout = async () => {
@@ -219,8 +256,8 @@ export default function Chat() {
                     key={message._id}
                     className={
                       message.sender === id
-                        ? "text-left mr-5"
-                        : "text-right ml-5"
+                        ? "text-left mr-6 sm:mr-4 lg:mr-8"
+                        : "text-right ml-6 sm:mr-4 lg:ml-8"
                     }
                   >
                     <div
@@ -231,6 +268,20 @@ export default function Chat() {
                       }`}
                     >
                       {message.text}
+                      {message.file && (
+                        <div>
+                          <a
+                            href={`${axios.defaults.baseURL}/uploads/${message.file}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <img
+                              src={`http://localhost:8800/api/uploads/${message.file}`}
+                              className="max-h-[90vh] max-w-full object-cover"
+                            />
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -250,6 +301,28 @@ export default function Chat() {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
             />
+            <label className="bg-gray-200 text-gray-500 p-2 rounded-sm border border-gray-300 cursor-pointer">
+              <input
+                type="file"
+                name="file"
+                id="file"
+                className="hidden"
+                onChange={sendFile}
+              />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-6 h-6"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18.97 3.659a2.25 2.25 0 00-3.182 0l-10.94 10.94a3.75 3.75 0 105.304 5.303l7.693-7.693a.75.75 0 011.06 1.06l-7.693 7.693a5.25 5.25 0 11-7.424-7.424l10.939-10.94a3.75 3.75 0 115.303 5.304L9.097 18.835l-.008.008-.007.007-.002.002-.003.002A2.25 2.25 0 015.91 15.66l7.81-7.81a.75.75 0 011.061 1.06l-7.81 7.81a.75.75 0 001.054 1.068L18.97 6.84a2.25 2.25 0 000-3.182z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </label>
+
             <button
               className="bg-green-500 p-2 text-white rounded-sm"
               type="submit"

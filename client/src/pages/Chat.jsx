@@ -6,7 +6,6 @@ import Logo from "../components/Logo";
 import { unique } from "../utils/helpers";
 import axios from "axios";
 import ContactUser from "../components/ContactUser";
-import fs from "fs";
 
 export const loader = async ({ request }) => {
   return new URL(request.url).searchParams.get("message");
@@ -41,19 +40,9 @@ export default function Chat() {
     });
   };
 
-  useEffect(() => {
-    if (currentContact) {
-      axios
-        .get(`/messages/${currentContact}`)
-        .then((res) => {
-          setMessages(res.data);
-        })
-        .catch((err) => {
-          console.log(err.response?.data.error);
-          setError("Sorry an error occurred, please try again later!");
-        });
-    }
-  }, [currentContact]);
+  const scrollToElement = () => {
+    msgRef.current?.scrollIntoView(false);
+  };
 
   useEffect(() => {
     axios.get("/users").then((res) => {
@@ -71,17 +60,37 @@ export default function Chat() {
     });
   }, [onlineUsers]);
 
+  useEffect(() => {
+    if (currentContact) {
+      axios
+        .get(`/messages/${currentContact}`)
+        .then((res) => {
+          setMessages(res.data);
+        })
+        .catch(() => {
+          setError("Sorry an error occurred, please try again later!");
+        });
+    }
+  }, [currentContact]);
+
+  // scroll to the bottom when both the current contact and the messages change
+  useEffect(() => {
+    scrollToElement();
+  }, [[messages, currentContact]]);
+
   function handleMessage(e) {
     const msg = JSON.parse(e.data);
     if ("online" in msg) {
       getOnlineUsers(msg.online);
     } else if ("text" in msg) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          ...msg,
-        },
-      ]);
+      if (msg.sender === currentContact) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            ...msg,
+          },
+        ]);
+      }
     }
   }
 
@@ -141,10 +150,8 @@ export default function Chat() {
 
     setNewMessage("");
 
-    const msgTextBox = msgRef.current;
-
     // scroll to the current sented message
-    msgTextBox.scrollIntoView(false);
+    // scrollToElement();
   };
 
   function sendFile(ev) {
@@ -285,7 +292,12 @@ export default function Chat() {
                     </div>
                   </div>
                 ))}
-                <div id="anchor" ref={msgRef}></div>
+
+                <div
+                  id="anchor"
+                  className="border border-red-400"
+                  ref={msgRef}
+                ></div>
               </div>
             </div>
           )}

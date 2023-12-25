@@ -3,7 +3,10 @@
 *::after {
   box-sizing: border-box;
   font-family: "Poppins", sans-serif;
-  overflow: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 .disappear {

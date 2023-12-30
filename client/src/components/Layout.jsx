@@ -15,6 +15,7 @@ export default function Layout() {
   //   }
   // };
   return (
+    // <>
     //   <button
     //     className="border bg-green-500 text-white p-1 absolute right-0"
     //     onClick={handleClick}
@@ -22,5 +23,6 @@ export default function Layout() {
     //     Logout
     //   </button>
     <Outlet />
+    // </>
   );
 }

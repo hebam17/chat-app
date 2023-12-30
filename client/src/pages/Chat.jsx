@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import Avatar from "../components/Avatar";
+// import Avatar from "../components/Avatar";
 import { UserContext } from "../context/UserContext";
 import DisplayError from "../components/DisplayError";
 import Logo from "../components/Logo";
@@ -293,11 +293,7 @@ export default function Chat() {
                   </div>
                 ))}
 
-                <div
-                  id="anchor"
-                  className="border border-red-400"
-                  ref={msgRef}
-                ></div>
+                <div id="anchor" className="h-2" ref={msgRef}></div>
               </div>
             </div>
           )}

@@ -1,24 +1,33 @@
 import { createContext, useEffect, useState } from "react";
 import axios from "axios";
-
+import { jwtDecode } from "jwt-decode";
 export const UserContext = createContext({});
 
 export function UserContextProvider({ children }) {
   const [username, setUsername] = useState(null);
   const [id, setId] = useState(null);
+  // const cookieString = document.cookie;
 
+  // https://www.techradiant.com/2023/08/14/how-to-read-a-cookie-in-react-js/
+  const readCookie = (name) => {
+    const cookieString = document.cookie;
+    const cookies = cookieString.split("; ");
+
+    for (const cookie of cookies) {
+      const [cookieName, cookieValue] = cookie.split("=");
+      const token = cookieName === name && cookieValue;
+      if (token) return jwtDecode(token);
+    }
+
+    return null; // Cookie not found
+  };
+
+  const cookieValue = readCookie("token");
   useEffect(() => {
-    axios
-      .get("/profile")
-      .then((response) => {
-        // console.log(response);
-        setId(response.data.userId);
-        setUsername(response.data.username);
-      })
-      .catch((err) => {
-        console.log(err.message);
-      });
-  }, []);
+    // get username and id from cookie and set the context values
+    if (cookieValue !== null) setId(cookieValue?.userId);
+    setUsername(cookieValue?.username);
+  }, [cookieValue]);
 
   return (
     <UserContext.Provider value={{ username, setUsername, id, setId }}>

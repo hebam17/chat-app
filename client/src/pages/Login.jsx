@@ -16,33 +16,38 @@ export const loader = async ({ request }) => {
   return new URL(request.url).searchParams.get("message");
 };
 
-export const action = async ({ request }) => {
-  const data = await request.formData();
-  let ValidationErrors = loginValidation(data);
+export const action =
+  (userContextData) =>
+  async ({ request }) => {
+    const data = await request.formData();
+    let ValidationErrors = loginValidation(data);
+    const { setUsername, setId } = userContextData;
 
-  const pathname = new URL(request.url).searchParams.get("redirectTo") || "/";
+    const pathname =
+      new URL(request.url).searchParams.get("redirectTo") || "/chat";
+    if (Object.keys(ValidationErrors).length === 0) {
+      // register backend request goes here
+      try {
+        const res = await axios.post("/login", {
+          username: data.get("username"),
+          email: data.get("email"),
+          password: data.get("password"),
+        });
 
-  if (Object.keys(ValidationErrors).length === 0) {
-    // register backend request goes here
-    try {
-      const res = await axios.post("/login", {
-        username: data.get("username"),
-        email: data.get("email"),
-        password: data.get("password"),
-      });
-      console.log("Logged in successfully");
-      return redirect(`${pathname}?message=User logged in successfully`);
-    } catch (error) {
-      return {
-        returnedRes:
-          error?.response?.data.error ||
-          "Sorry, an error occurred, please try again later!",
-      };
+        setUsername(data.get("username"));
+        setId(res.data["id"]);
+        return redirect(`${pathname}?message=User logged in successfully`);
+      } catch (error) {
+        return {
+          returnedRes:
+            error?.response?.data.error ||
+            "Sorry, an error occurred, please try again later!",
+        };
+      }
+    } else {
+      return { ValidationErrors };
     }
-  } else {
-    return { ValidationErrors };
-  }
-};
+  };
 
 const inputs = [
   {

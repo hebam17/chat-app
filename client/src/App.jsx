@@ -24,63 +24,69 @@ import Chat, { loader as chatLoader } from "./pages/Chat";
 import AuthRequired, { AuthDenied } from "./components/AuthRequired";
 import Layout from "./components/Layout";
 import Contact from "./components/Contact";
-
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <>
-      <Route element={<Layout />}>
-        <Route element={<AuthRequired />}>
-          <Route
-            path="/"
-            element={<Chat />}
-            loader={chatLoader}
-            errorElement={<ErrorMessage />}
-          />
-          <Route
-            path="/contact/:username"
-            element={<Contact />}
-            // loader={chatLoader}
-            errorElement={<ErrorMessage />}
-          />
-        </Route>
-        <Route element={<AuthDenied />}>
-          <Route
-            path="/register"
-            element={<Register />}
-            action={registerAction}
-            errorElement={<ErrorMessage />}
-          />
-          <Route
-            path="/login"
-            element={<Login />}
-            loader={loginLoader}
-            action={loginAction}
-            errorElement={<ErrorMessage />}
-          />
-          <Route
-            path="/recovery-email-send"
-            element={<RecoveryEmailSend />}
-            action={recoveryEmailSendAction}
-            errorElement={<ErrorMessage />}
-          />
-          <Route
-            path="/recovery"
-            element={<PasswordRecovery />}
-            errorElement={<ErrorMessage />}
-          />
-          <Route
-            path="/reset-password"
-            element={<ResetPassword />}
-            action={resetPasswordAction}
-            errorElement={<ErrorMessage />}
-          />
-        </Route>
-      </Route>
-    </>
-  )
-);
+import Home from "./pages/Home";
+import { UserContext } from "./context/UserContext";
+import { useContext } from "react";
 
 function App() {
+  const userContextData = useContext(UserContext);
+
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} errorElement={<ErrorMessage />} />
+
+          <Route element={<AuthRequired />}>
+            <Route
+              path="/chat"
+              element={<Chat />}
+              loader={chatLoader}
+              errorElement={<ErrorMessage />}
+            />
+            <Route
+              path="/contact/:username"
+              element={<Contact />}
+              errorElement={<ErrorMessage />}
+            />
+          </Route>
+          <Route element={<AuthDenied />}>
+            <Route
+              path="/register"
+              element={<Register />}
+              action={registerAction}
+              errorElement={<ErrorMessage />}
+            />
+            <Route
+              path="/login"
+              element={<Login />}
+              loader={loginLoader}
+              action={loginAction(userContextData)}
+              errorElement={<ErrorMessage />}
+            />
+            <Route
+              path="/recovery-email-send"
+              element={<RecoveryEmailSend />}
+              action={recoveryEmailSendAction}
+              errorElement={<ErrorMessage />}
+            />
+            <Route
+              path="/recovery"
+              element={<PasswordRecovery />}
+              errorElement={<ErrorMessage />}
+            />
+            <Route
+              path="/reset-password"
+              element={<ResetPassword />}
+              action={resetPasswordAction}
+              errorElement={<ErrorMessage />}
+            />
+          </Route>
+          {/* <Route index path="/" element={<Home />} /> */}
+        </Route>
+      </>
+    )
+  );
   axios.defaults.baseURL = "http://localhost:8800/api";
   axios.defaults.withCredentials = true;
 

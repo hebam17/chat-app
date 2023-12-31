@@ -1,10 +1,10 @@
-// validate password
-
+// register validation
 export const validation = (data) => {
   const errors = {};
 
   const specialCharsRegexp = /[`!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/;
-  const emailRegexp = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g;
+  const emailRegexp = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+  const passwordRegexp = /[A-Z !@#$%.^&*()/><-]*\S{6,}/;
 
   for (let [key, value] of data) {
     if (!value.trim()) {
@@ -15,15 +15,21 @@ export const validation = (data) => {
       errors[key] = "This email format is not supported!";
     } else if (key === "username" && specialCharsRegexp.test(value)) {
       errors[key] = "No special characters allowed";
+    } else if (key === "username" && value.length < 3) {
+      errors[key] = "Username cannot be less than 3 characters";
+    } else if (key === "password" && !passwordRegexp.test(value)) {
+      errors[key] = "password cannot be less than 6 characters";
     }
   }
 
+  // password validation
   if (data.get("password") !== data.get("confirmPassword")) {
     errors["confirmPassword"] = "Password and confirm password should match!";
   }
   return errors;
 };
 
+// Login validation
 export const loginValidation = (data) => {
   const errors = {};
 
@@ -42,6 +48,7 @@ export const loginValidation = (data) => {
   return errors;
 };
 
+// Reset password validation
 export const ResetPasswordValidation = (data) => {
   const errors = {};
   if (data.get("password") !== data.get("confirmPassword")) {

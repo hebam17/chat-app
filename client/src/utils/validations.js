@@ -4,7 +4,7 @@ export const validation = (data) => {
 
   const specialCharsRegexp = /[`!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/;
   const emailRegexp = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
-  const passwordRegexp = /[A-Z !@#$%.^&*()/><-]*\S{6,}/;
+  const passwordRegexp = /[A-Z !@#$%.^&*()/><-]*\S{6,15}/;
 
   for (let [key, value] of data) {
     if (!value.trim()) {
@@ -15,10 +15,12 @@ export const validation = (data) => {
       errors[key] = "This email format is not supported!";
     } else if (key === "username" && specialCharsRegexp.test(value)) {
       errors[key] = "No special characters allowed";
-    } else if (key === "username" && value.length < 3) {
-      errors[key] = "Username cannot be less than 3 characters";
+    } else if ((key === "username" && value.length < 3) || value.length > 30) {
+      errors[key] =
+        "Username cannot be less than 3 or more than 30 characters long";
     } else if (key === "password" && !passwordRegexp.test(value)) {
-      errors[key] = "password cannot be less than 6 characters";
+      errors[key] =
+        "password cannot be less than 6 or more than 15 charachters long";
     }
   }
 

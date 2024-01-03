@@ -3,9 +3,38 @@ const router = express.Router();
 const authControllers = require("../controllers/authControllers");
 const { Auth, localOTP } = require("../middleware/userAuth");
 const registerMail = require("../controllers/mailer");
+const { check } = require("express-validator");
 
 // POST ROUTES
-router.route("/register").post(authControllers.register);
+router
+  .route("/register")
+  .post(
+    [
+      check("email")
+        .notEmpty()
+        .withMessage("Email is Required!")
+        .isEmail()
+        .withMessage("This email format is not supported!"),
+      check("password")
+        .notEmpty()
+        .withMessage("password is Required!")
+        .isLength({ min: 6, max: 15 })
+        .withMessage(
+          "password length should be between 6, 15 charachters long!"
+        ),
+      check("username")
+        .notEmpty()
+        .withMessage("username is Required!")
+        .isLength({ min: 3, max: 30 })
+        .withMessage(
+          "username length should be between 3, 30 charachters long!"
+        )
+        .isAlphanumeric()
+        .withMessage("only letters and numbers are allowed!"),
+      check("profile").isString().withMessage("only strings allowed!"),
+    ],
+    authControllers.register
+  );
 
 router.route("/registerMail").post(registerMail); //send the email
 

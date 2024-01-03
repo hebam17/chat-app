@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   Form,
   Link,
@@ -22,6 +22,7 @@ export const action = async ({ request }) => {
         username: data.get("username"),
         email: data.get("email"),
         password: data.get("password"),
+        profile: "",
       });
 
       console.log("res:", res);
@@ -29,8 +30,14 @@ export const action = async ({ request }) => {
       return redirect(
         "/login?message=User was registerd successfully,now login please!"
       );
-    } catch (error) {
-      return { retrunedRes: error.response.data.error };
+    } catch (err) {
+      let error = err.response?.data?.error;
+      if (Array.isArray(error)) {
+        let errorObj = {};
+        Object.assign(errorObj, ...error);
+        return { ValidationErrors: errorObj };
+      }
+      return { retrunedRes: error };
     }
   } else {
     return { ValidationErrors };
@@ -72,6 +79,10 @@ export default function Register() {
   const errorMessage = useActionData();
   const userRef = useRef();
   const navigation = useNavigation();
+
+  useEffect(() => {
+    console.log(errorMessage);
+  }, [errorMessage]);
 
   return (
     <div className="container">

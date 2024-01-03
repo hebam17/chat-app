@@ -1,14 +1,24 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
 const otpGenerator = require("otp-generator");
+const { validationResult } = require("express-validator");
+require("dotenv").config();
 
 // REGISTER
 const register = async (req, res) => {
   try {
     const { username, password, profile, email } = req.body;
 
+    const errors = validationResult(req);
+
+    const result = errors.formatWith((error) => {
+      return { [error.path]: error.msg };
+    });
+    const errorsArr = result.array({ onlyFirstError: true });
+    if (errorsArr.length) {
+      return res.status(400).send({ error: errorsArr });
+    }
     if (!(username?.trim() && email?.trim() && password?.trim()))
       return res
         .status(400)

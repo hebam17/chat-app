@@ -1,14 +1,12 @@
 const Message = require("../models/Message");
 
 const getMessages = async (req, res) => {
-  const { contactId } = req.params;
-  const { userId } = req.user;
+  const { convId } = req.params;
 
   try {
-    if (contactId && userId) {
+    if (convId) {
       const messages = await Message.find({
-        sender: { $in: [userId, contactId] },
-        recipient: { $in: [userId, contactId] },
+        conv: convId,
       });
 
       return res.status(200).json(messages);

@@ -1,5 +1,4 @@
 import { useContext, useEffect, useRef, useState } from "react";
-// import Avatar from "../components/Avatar";
 import { UserContext } from "../context/UserContext";
 import DisplayError from "../components/DisplayError";
 import Logo from "../components/Logo";
@@ -7,15 +6,33 @@ import { unique } from "../utils/helpers";
 import axios from "axios";
 import ContactUser from "../components/ContactUser";
 
-export const loader = async ({ request }) => {
-  return new URL(request.url).searchParams.get("message");
-};
+export const loader =
+  (userContextData) =>
+  async ({ request }) => {
+    const { convs, setConvs, setFriends, friends } = userContextData;
+
+    if (convs === null) {
+      try {
+        const res = await axios.get("/convs/getConvs");
+        const data = res.data;
+        setConvs(data?.convs);
+        setFriends(data?.friends);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    return new URL(request.url).searchParams.get("message");
+  };
 
 export default function Chat() {
   const [ws, setWs] = useState(null);
-  const [onlineUsers, setOnlineUsers] = useState({});
-  const [offlineUsers, setOfflineUsers] = useState({});
-  const { username, setUsername, id, setId } = useContext(UserContext);
+  const [onlineUsers, setOnlineUsers] = useState([]);
+
+  const [users, setUsers] = useState([]);
+
+  const { username, setUsername, id, setId, convs, setConvs, friends } =
+    useContext(UserContext);
+  const [currentContactId, setCurrentContactId] = useState(null);
   const [currentContact, setCurrentContact] = useState(null);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
@@ -46,24 +63,14 @@ export default function Chat() {
 
   useEffect(() => {
     axios.get("/users").then((res) => {
-      const offlineUsersArr = res.data.filter((user) => {
-        return !(user._id in onlineUsers);
-      });
-
-      const offlineUsers = {};
-
-      offlineUsersArr.forEach(({ _id, username }) => {
-        offlineUsers[_id] = username;
-      });
-
-      setOfflineUsers(offlineUsers);
+      setUsers(res.data);
     });
   }, [onlineUsers]);
 
   useEffect(() => {
-    if (currentContact) {
+    if (currentContactId) {
       axios
-        .get(`/messages/${currentContact}`)
+        .get(`/messages/${currentContactId}`)
         .then((res) => {
           setMessages(res.data);
         })
@@ -71,19 +78,19 @@ export default function Chat() {
           setError("Sorry an error occurred, please try again later!");
         });
     }
-  }, [currentContact]);
+  }, [currentContactId]);
 
   // scroll to the bottom when both the current contact and the messages change
   useEffect(() => {
     scrollToElement();
-  }, [[messages, currentContact]]);
+  }, [[messages, currentContactId]]);
 
   function handleMessage(e) {
     const msg = JSON.parse(e.data);
     if ("online" in msg) {
       getOnlineUsers(msg.online);
     } else if ("text" in msg) {
-      if (msg.sender === currentContact) {
+      if (msg.sender !== id) {
         setMessages((prev) => [
           ...prev,
           {
@@ -108,12 +115,12 @@ export default function Chat() {
   const sendMessage = (e, file = null) => {
     if (e) {
       e.preventDefault();
-
       ws.send(
         JSON.stringify({
-          recipient: currentContact,
+          conv: currentContactId,
           text: newMessage,
           file,
+          users: currentContact.users,
         })
       );
 
@@ -122,9 +129,10 @@ export default function Chat() {
         {
           _id: Date.now(),
           text: newMessage,
-          sender: id,
-          recipient: currentContact,
+          conv: currentContactId,
           file: null,
+          sender: id,
+          users: currentContact.users,
         },
       ]);
     }
@@ -132,14 +140,15 @@ export default function Chat() {
     if (file) {
       ws.send(
         JSON.stringify({
-          recipient: currentContact,
+          conv: currentContactId,
+          users: currentContact.users,
           text: newMessage,
           file,
         })
       );
 
       axios
-        .get(`/messages/${currentContact}`)
+        .get(`/messages/${currentContactId}`)
         .then((res) => {
           setMessages(res.data);
         })
@@ -149,9 +158,6 @@ export default function Chat() {
     }
 
     setNewMessage("");
-
-    // scroll to the current sented message
-    // scrollToElement();
   };
 
   function sendFile(ev) {
@@ -165,6 +171,12 @@ export default function Chat() {
     };
   }
 
+  // handle conversation click to set the current conversation
+  const setContact = async (conv) => {
+    setCurrentContactId(conv._id);
+    setCurrentContact(conv);
+  };
+
   // log user out
   const logout = async () => {
     try {
@@ -174,6 +186,25 @@ export default function Chat() {
       setUsername(null);
     } catch (error) {
       console.log(error.response.data.error);
+    }
+  };
+
+  // handle adding new user to the conversations list
+  const handleAdding = async (username, contactname, userId, contactId) => {
+    console.log("contactname:", username, contactname, userId, contactId);
+    try {
+      if (!(userId === contactId)) {
+        const newConv = await axios.post("/convs/addConv", {
+          isPrivate: true,
+          name: `${username}-${contactname}`,
+          users: [userId, contactId],
+        });
+
+        setCurrentContactId(newConv._id);
+        setConvs((prevConvs) => [...prevConvs, newConv]);
+      }
+    } catch (err) {
+      console.log(err);
     }
   };
 
@@ -189,27 +220,46 @@ export default function Chat() {
       <div className="bg-white w-1/3 flex flex-col">
         <div className="flex-grow">
           <Logo />
-          {Object.keys(otherOnlineUsers).map((userId) => (
-            <ContactUser
-              key={userId}
-              userId={userId}
-              online={true}
-              username={otherOnlineUsers[userId]}
-              handleClick={setCurrentContact}
-              selected={userId === currentContact}
-            />
-          ))}
 
-          {Object.keys(offlineUsers).map((userId) => (
+          {convs.map((conv) => (
             <ContactUser
-              key={userId}
-              userId={userId}
-              online={false}
-              username={offlineUsers[userId]}
-              handleClick={setCurrentContact}
-              selected={userId === currentContact}
+              key={conv._id}
+              userId={conv._id}
+              online={true}
+              username={conv.name}
+              myUsername={username}
+              setContact={() => setContact(conv)}
+              selected={conv._id === currentContactId}
+              contact={true}
+              conv={true}
+              privateConv={conv.isPrivate}
             />
           ))}
+          {users.map((user) => {
+            if (!friends.includes(user._id) && user._id !== id) {
+              return (
+                <ContactUser
+                  key={user._id}
+                  userId={user._id}
+                  online={true}
+                  username={user.username}
+                  handleAdding={(contactname, contactId) =>
+                    handleAdding(username, contactname, id, contactId)
+                  }
+                />
+              );
+            } else if (user._id !== id) {
+              return (
+                <ContactUser
+                  key={user._id}
+                  userId={user._id}
+                  online={true}
+                  username={user.username}
+                  contact={true}
+                />
+              );
+            }
+          })}
         </div>
 
         <div className="p-2 text-center flex gap-2 justify-center items-center">
@@ -241,13 +291,13 @@ export default function Chat() {
         <div className="flex-grow">
           {error && <DisplayError error={error} />}
 
-          {!currentContact && (
+          {!currentContactId && (
             <div className="flex h-full items-center justify-center">
               <div className="text-gray-400">&larr; Select a person</div>
             </div>
           )}
 
-          {currentContact && (
+          {currentContactId && (
             <div className="h-full relative">
               <div
                 id="message-container"
@@ -299,7 +349,7 @@ export default function Chat() {
           )}
         </div>
 
-        {currentContact && (
+        {currentContactId && (
           <form className="flex gap-2" onSubmit={sendMessage}>
             <input
               type="text"

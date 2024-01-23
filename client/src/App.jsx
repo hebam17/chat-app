@@ -41,7 +41,7 @@ function App() {
             <Route
               path="/chat"
               element={<Chat />}
-              loader={chatLoader}
+              loader={chatLoader(userContextData)}
               errorElement={<ErrorMessage />}
             />
             <Route

@@ -21,7 +21,7 @@ export const action =
   async ({ request }) => {
     const data = await request.formData();
     let ValidationErrors = loginValidation(data);
-    const { setUsername, setId } = userContextData;
+    const { setUsername, setId, setConvs, setFriends } = userContextData;
 
     const pathname =
       new URL(request.url).searchParams.get("redirectTo") || "/chat";
@@ -30,12 +30,13 @@ export const action =
       try {
         const res = await axios.post("/login", {
           username: data.get("username"),
-          email: data.get("email"),
           password: data.get("password"),
         });
 
         setUsername(data.get("username"));
         setId(res.data["id"]);
+        setConvs(res.data["conv"]);
+        setFriends(res.data["friends"]);
         return redirect(`${pathname}?message=User logged in successfully`);
       } catch (error) {
         return {

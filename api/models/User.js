@@ -17,6 +17,13 @@ const UserSchema = new mongoose.Schema(
       require: [true, "please provide an email"],
       unique: [true],
     },
+    conv: [{ type: mongoose.Schema.Types.ObjectId, ref: "Conversation" }],
+    friends: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     firstName: { type: String },
     lastName: { type: String },
     mobile: { type: Number },

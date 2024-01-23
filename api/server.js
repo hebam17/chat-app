@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const authRouter = require("./router/authRoute");
 const messagesRouter = require("./router/messagesRoute");
+const convRouter = require("./router/ConvRoute");
 const ws = require("ws");
 const fs = require("fs");
 const path = require("path");
@@ -30,6 +31,7 @@ app.disable("x-powered-by");
 app.use("/api/uploads", express.static(path.join(__dirname, "/uploads")));
 app.use("/api", authRouter);
 app.use("/api/messages", messagesRouter);
+app.use("/api/convs", convRouter);
 
 mongoose
   .connect(process.env.MONGO_URL)
@@ -103,7 +105,7 @@ wss.on("connection", (connection, req) => {
   connection.on("message", async (message) => {
     const messageData = JSON.parse(message.toString());
 
-    const { recipient, text, file } = messageData;
+    const { conv, text, file, users } = messageData;
     // console.log(messageData);
     console.log("file:", file);
     let filename = null;
@@ -121,22 +123,22 @@ wss.on("connection", (connection, req) => {
       });
     }
 
-    if (recipient && (text || file)) {
+    if (conv && (text || file)) {
       const messageDoc = await Message.create({
+        conv,
         sender: connection.userId,
-        recipient,
         text: text,
         file: filename || null,
       });
-
+      // get the conv users first
       [...wss.clients]
-        .filter((user) => user.userId === recipient)
+        .filter((user) => users.includes(user.userId))
         .forEach((user) =>
           user.send(
             JSON.stringify({
+              conv,
               text: text,
               sender: connection.userId,
-              recipient,
               _id: messageDoc._id,
               file: filename || null,
             })

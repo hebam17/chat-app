@@ -6,6 +6,8 @@ export const UserContext = createContext({});
 export function UserContextProvider({ children }) {
   const [username, setUsername] = useState(null);
   const [id, setId] = useState(null);
+  const [convs, setConvs] = useState(null);
+  const [friends, setFriends] = useState(null);
   // const cookieString = document.cookie;
 
   // https://www.techradiant.com/2023/08/14/how-to-read-a-cookie-in-react-js/
@@ -25,12 +27,25 @@ export function UserContextProvider({ children }) {
   const cookieValue = readCookie("token");
   useEffect(() => {
     // get username and id from cookie and set the context values
-    if (cookieValue !== null) setId(cookieValue?.userId);
-    setUsername(cookieValue?.username);
+    if (cookieValue !== null) {
+      setId(cookieValue?.userId);
+      setUsername(cookieValue?.username);
+    }
   }, [cookieValue]);
 
   return (
-    <UserContext.Provider value={{ username, setUsername, id, setId }}>
+    <UserContext.Provider
+      value={{
+        username,
+        setUsername,
+        id,
+        setId,
+        convs,
+        setConvs,
+        friends,
+        setFriends,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );

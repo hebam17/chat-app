@@ -36,11 +36,11 @@ router
     authControllers.register
   );
 
+router.route("/login").post(authControllers.login); //login user
+
 router.route("/registerMail").post(registerMail); //send the email
 
 router.route("/authentication").post(authControllers.authenticate); //authenticate user
-
-router.route("/login").post(authControllers.login); //login user
 
 router.route("/logout").post(Auth, authControllers.logout); //logout user
 

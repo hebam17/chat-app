@@ -1,0 +1,10 @@
+const express = require("express");
+const router = express.Router();
+
+const convControllers = require("../controllers/convControllers");
+const { Auth } = require("../middleware/userAuth");
+
+router.route("/getConvs").get(Auth, convControllers.getConv);
+router.route("/addConv").post(Auth, convControllers.addConv);
+
+module.exports = router;

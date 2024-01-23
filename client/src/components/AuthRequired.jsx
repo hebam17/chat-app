@@ -1,16 +1,9 @@
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { UserContext } from "../context/UserContext";
-import {
-  Navigate,
-  Outlet,
-  useLocation,
-  useNavigate,
-  useNavigation,
-} from "react-router-dom";
-import axios from "axios";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 export default function AuthRequired() {
-  const { username, setId, setUsername, id } = useContext(UserContext);
+  const { username } = useContext(UserContext);
   const location = useLocation();
   const pathname = location.pathname;
 

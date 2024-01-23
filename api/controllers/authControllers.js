@@ -66,7 +66,7 @@ const login = async (req, res) => {
       return res.status(400).json("please provide all required fields!");
 
     // check if user already exist
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ username }).populate("conv");
     if (!user) {
       return res.status(404).send({ error: "Username is not found!" });
     }
@@ -93,6 +93,8 @@ const login = async (req, res) => {
           .send({
             message: "Login Successfully",
             id: user._id,
+            conv: user.conv,
+            friends: user.friends,
           });
       })
       .catch((err) =>

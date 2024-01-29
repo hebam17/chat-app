@@ -1,4 +1,6 @@
-export default function Avatar({ userId, username, online }) {
+import { useEffect } from "react";
+
+export default function Avatar({ userId, username = "", online }) {
   const colors = [
     "indigo",
     "teal",

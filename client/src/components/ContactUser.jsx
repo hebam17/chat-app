@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+/* eslint-disable react/prop-types */
+import { useContext, useEffect, useState } from "react";
 import Avatar from "./Avatar";
+import { UserContext } from "../context/UserContext";
 
 export default function ContactUser({
   userId,
@@ -8,12 +10,18 @@ export default function ContactUser({
   online,
   handleAdding = null,
   contact = false,
-  myUsername,
   conv = false,
   privateConv = false,
+  convUsers = [],
   setContact = () => {},
+  AddingToGroup = () => {},
+  removingFromGroup = () => {},
+  removeConv = () => {},
+  createGroup = false,
 }) {
   const [convName, setConvName] = useState(null);
+  const [inGroup, setInGroup] = useState(false);
+  const { username: myUsername, id } = useContext(UserContext);
 
   useEffect(() => {
     if (conv && privateConv) {
@@ -22,7 +30,7 @@ export default function ContactUser({
         .filter((user) => user !== myUsername)[0];
       setConvName(newConvName);
     }
-  }, []);
+  }, [contact, createGroup]);
 
   return (
     <div className="flex justify-between items-center pr-4">
@@ -35,14 +43,55 @@ export default function ContactUser({
       >
         {selected && <div className="p-1 bg-green-500 h-12 rounded-r-sm"></div>}
         <div className="flex gap-2 pl-4 items-center">
-          <Avatar online={online} username={username} userId={userId} />
+          <Avatar
+            online={online}
+            username={convName ?? username}
+            userId={userId}
+          />
           <span className="text-gray-800">
             {conv && privateConv ? convName : username}
           </span>
+          <div className="flex items-center">
+            {conv && !privateConv && "group"}
+          </div>
         </div>
       </div>
+      {conv && (
+        <button
+          type="button"
+          className="bg-green-400 px-3 py-1 rounded-md text-white"
+          onClick={() => removeConv(userId, privateConv, convUsers)}
+        >
+          delete
+        </button>
+      )}
 
-      {!contact && (
+      {createGroup &&
+        (!inGroup ? (
+          <button
+            type="button"
+            className="bg-green-400 w-9 h-9 rounded-md text-white text-lg"
+            onClick={() => {
+              setInGroup(true);
+              AddingToGroup(userId);
+            }}
+          >
+            +
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="bg-green-400 w-9 h-9 rounded-md text-white text-lg"
+            onClick={() => {
+              setInGroup(false);
+              removingFromGroup(userId);
+            }}
+          >
+            -
+          </button>
+        ))}
+
+      {!createGroup && !conv && !contact && (
         <button
           type="button"
           className="bg-green-400 px-3 py-1 rounded-md text-white"

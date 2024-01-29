@@ -30,13 +30,24 @@ export default function Chat() {
 
   const [users, setUsers] = useState([]);
 
-  const { username, setUsername, id, setId, convs, setConvs, friends } =
-    useContext(UserContext);
+  const {
+    username,
+    setUsername,
+    id,
+    setId,
+    convs,
+    setConvs,
+    friends,
+    setFriends,
+  } = useContext(UserContext);
   const [currentContactId, setCurrentContactId] = useState(null);
   const [currentContact, setCurrentContact] = useState(null);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [createGroup, setCreateGroup] = useState(false);
+  const [groupName, setGroupName] = useState("");
+  const [group, setGroup] = useState([]);
   const msgRef = useRef();
 
   useEffect(() => {
@@ -189,7 +200,7 @@ export default function Chat() {
     }
   };
 
-  // handle adding new user to the conversations list
+  // handle adding new user to the conversations list // private conversation between this user and the current user
   const handleAdding = async (username, contactname, userId, contactId) => {
     console.log("contactname:", username, contactname, userId, contactId);
     try {
@@ -197,11 +208,59 @@ export default function Chat() {
         const newConv = await axios.post("/convs/addConv", {
           isPrivate: true,
           name: `${username}-${contactname}`,
-          users: [userId, contactId],
+          // send all users other than the current user
+          users: [contactId],
         });
-
         setCurrentContactId(newConv._id);
-        setConvs((prevConvs) => [...prevConvs, newConv]);
+        setConvs((prevConvs) => [...prevConvs, newConv.data]);
+        setFriends((prev) => [...prev, contactId]);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  // adding a user to the group
+  const AddingToGroup = (userID) => {
+    console.log(userID, "in");
+    setGroup((prev) => [...prev, userID]);
+  };
+
+  // removing a user from the group
+  const removingFromGroup = (userID) => {
+    setGroup((prev) => prev.filter((user) => user !== userID));
+  };
+
+  // create the group
+  const handleCreateGroup = async () => {
+    try {
+      if (!groupName || group.length === 0) {
+        setError("no Group was created!");
+        setCreateGroup((prev) => !prev);
+        setGroupName("");
+      }
+      const newConv = await axios.post("/convs/addConv", {
+        isPrivate: false,
+        name: groupName,
+        users: group,
+      });
+      setCreateGroup((prev) => !prev);
+      setGroupName("");
+      setConvs((prev) => [...prev, newConv]);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const removeConv = async (convID, isPrivate, users) => {
+    try {
+      await axios.get(`/convs/deleteConv/${convID}`);
+      setConvs((convs) => convs.filter((conv) => conv._id !== convID));
+      if (isPrivate) {
+        const convFriend = users.filter((user) => user !== id)[0];
+        setFriends((friends) =>
+          friends.filter((friend) => friend !== convFriend)
+        );
       }
     } catch (err) {
       console.log(err);
@@ -221,45 +280,82 @@ export default function Chat() {
         <div className="flex-grow">
           <Logo />
 
-          {convs.map((conv) => (
+          {convs?.map((conv) => (
             <ContactUser
               key={conv._id}
               userId={conv._id}
               online={true}
               username={conv.name}
-              myUsername={username}
               setContact={() => setContact(conv)}
               selected={conv._id === currentContactId}
               contact={true}
               conv={true}
+              convUsers={conv.users}
               privateConv={conv.isPrivate}
+              removeConv={removeConv}
             />
           ))}
-          {users.map((user) => {
-            if (!friends.includes(user._id) && user._id !== id) {
-              return (
-                <ContactUser
-                  key={user._id}
-                  userId={user._id}
-                  online={true}
-                  username={user.username}
-                  handleAdding={(contactname, contactId) =>
-                    handleAdding(username, contactname, id, contactId)
-                  }
-                />
-              );
-            } else if (user._id !== id) {
-              return (
-                <ContactUser
-                  key={user._id}
-                  userId={user._id}
-                  online={true}
-                  username={user.username}
-                  contact={true}
-                />
-              );
-            }
-          })}
+
+          <div className=" border border-t-green-500 my-4 py-4">
+            {!createGroup ? (
+              <button
+                type="button"
+                className="bg-green-400 px-3 py-1 rounded-md text-white ml-6 mb-4"
+                onClick={() => setCreateGroup((prev) => !prev)}
+              >
+                Create new group
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="bg-green-400 px-3 py-1 rounded-md text-white ml-6 mb-4"
+                onClick={handleCreateGroup}
+              >
+                Done
+              </button>
+            )}
+            {createGroup && (
+              <input
+                type="text"
+                className="bg-green-50 roudend-md p-2 my-3 mx-2"
+                onChange={(e) => setGroupName(e.target.value)}
+                value={groupName}
+                placeholder="Enter the group name..."
+              />
+            )}
+
+            {users?.map((user) => {
+              if (!friends.includes(user._id) && user._id !== id) {
+                return (
+                  <ContactUser
+                    key={user._id}
+                    userId={user._id}
+                    online={true}
+                    username={user.username}
+                    createGroup={createGroup}
+                    handleAdding={(contactname, contactId) =>
+                      handleAdding(username, contactname, id, contactId)
+                    }
+                    AddingToGroup={AddingToGroup}
+                    removingFromGroup={removingFromGroup}
+                  />
+                );
+              } else if (user._id !== id) {
+                return (
+                  <ContactUser
+                    key={user._id}
+                    userId={user._id}
+                    online={true}
+                    username={user.username}
+                    contact={true}
+                    createGroup={createGroup}
+                    AddingToGroup={AddingToGroup}
+                    removingFromGroup={removingFromGroup}
+                  />
+                );
+              }
+            })}
+          </div>
         </div>
 
         <div className="p-2 text-center flex gap-2 justify-center items-center">

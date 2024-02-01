@@ -5,6 +5,8 @@ import Logo from "../components/Logo";
 import { unique } from "../utils/helpers";
 import axios from "axios";
 import ContactUser from "../components/ContactUser";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/blur.css";
 
 export const loader =
   (userContextData) =>
@@ -428,9 +430,10 @@ export default function Chat() {
                             target="_blank"
                             rel="noreferrer"
                           >
-                            <img
+                            <LazyLoadImage
                               src={`http://localhost:8800/api/uploads/${message.file}`}
                               className="max-h-[90vh] max-w-full object-cover"
+                              effect="blur"
                             />
                           </a>
                         </div>

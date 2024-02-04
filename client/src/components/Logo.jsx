@@ -1,6 +1,6 @@
 export default function Logo() {
   return (
-    <h1 className="text-green-600 font-bold flex gap-2 mb-4 p-4">
+    <div className="text-sky-600 font-bold flex gap-1 lg:m-5 md:m-4 m-2 fixed top-0 left-0">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
@@ -14,6 +14,6 @@ export default function Logo() {
         />
       </svg>
       UChat
-    </h1>
+    </div>
   );
 }

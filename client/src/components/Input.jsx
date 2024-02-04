@@ -10,18 +10,18 @@ export default function Input({
 }) {
   return (
     <div className="my-2">
-      <label htmlFor={id}>{inputLabel}</label>
+      {/* <label htmlFor={id}>{inputLabel}</label> */}
       <input
         type={type}
         name={inputName}
         id={id}
-        className="w-full my-2 p-2 rounded-md border border-gray-200 focus:border-blue-300 focus:outline-none "
-        placeholder="Enter your username"
+        className="w-full my-1 px-3 py-2 rounded-lg bg-sky-50 focus:outline-sky-500 focus:border-none lg:text-lg md:text-base text-sm"
+        // placeholder="Enter your username"
         autoComplete="off"
         {...others}
       />
 
-      <p className="text-sm my-1 text-red-500">
+      <p className="text-sm my-1 px-3 text-red-600">
         {errorMessage && errorMessage[inputName]}
       </p>
     </div>

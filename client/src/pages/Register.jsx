@@ -10,6 +10,7 @@ import { validation } from "../utils/validations";
 import Input from "../components/Input";
 import axios from "axios";
 import DisplayError from "../components/DisplayError";
+import Logo from "../components/Logo";
 
 export const action = async ({ request }) => {
   const data = await request.formData();
@@ -49,28 +50,28 @@ const inputs = [
     id: "username",
     type: "text",
     inputName: "username",
-    placeholder: "Enter your username",
+    placeholder: "Username",
     inputLabel: "Username",
   },
   {
     id: "email",
     type: "email",
     inputName: "email",
-    placeholder: "Enter your email",
+    placeholder: "Email",
     inputLabel: "Email",
   },
   {
     id: "password",
     type: "password",
     inputName: "password",
-    placeholder: "Enter your password",
+    placeholder: "Password",
     inputLabel: "Password",
   },
   {
     id: "confirmPassword",
     type: "password",
     inputName: "confirmPassword",
-    placeholder: "Write your password again",
+    placeholder: "Confirm Password",
     inputLabel: "Confirm Password",
   },
 ];
@@ -85,16 +86,25 @@ export default function Register() {
   }, [errorMessage]);
 
   return (
-    <div className="container">
-      <div className="flex px-6 justify-center flex-col items-center">
-        <h1 className="text-4xl text-center my-3 font-bold">
-          Welcome to CHAT APP
+    <main className="md:mx-6 mx-4 main-auth">
+      <Logo />
+      <div className="flex py-2 flex-col mx-auto justify-center items-center min-h-screen">
+        <h1 className="lg:text-4xl md:text-3xl text-2xl leading-10 text-center font-semibold md:mb-4 mb-3 text-sky-500">
+          Create Account
         </h1>
+        <p className="font-semibold lg:text-lg md:text-base text-sm text-center">
+          Create an account so you join our community
+        </p>
 
         <DisplayError error={errorMessage && errorMessage.retrunedRes} />
 
-        <Form method="post" ref={userRef} className="py-4" replace>
-          <div className="profile py-2">
+        <Form
+          method="post"
+          ref={userRef}
+          className="lg:w-1/2 md:w-2/3 sm:w-3/4 w-full mx-auto"
+          replace
+        >
+          <div className="profile py-2 flex flex-col justify-center">
             {inputs.map((inputData) => (
               <Input
                 {...inputData}
@@ -105,23 +115,23 @@ export default function Register() {
 
             <button
               type="submit"
-              className="border border-gray-500 w-full p-2 text-xl text-gray-500 rounded-md mt-4"
+              className="w-full px-3 py-2 lg:text-2xl md:text-xl text-lg text-white rounded-lg mt-4 bg-sky-500"
               disabled={navigation.state === "submitting"}
             >
               {navigation.state === "submitting" ? "Submitting ..." : "Submit"}
             </button>
           </div>
 
-          <div className="text-center py-4">
-            <span className="text-gray-500">
+          <div className="text-center pt-4 md:text-base text-sm">
+            <span className="text-gray-800 tracking-tight">
               Already have an account?
-              <Link to="/login" className="text-red-500 pl-1">
+              <Link to="/login" className="text-red-600 pl-1">
                 Login Now
               </Link>
             </span>
           </div>
         </Form>
       </div>
-    </div>
+    </main>
   );
 }

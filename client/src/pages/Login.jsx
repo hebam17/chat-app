@@ -11,6 +11,7 @@ import { loginValidation } from "../utils/validations";
 import axios from "axios";
 import { useEffect } from "react";
 import DisplayError from "../components/DisplayError";
+import Logo from "../components/Logo";
 
 export const loader = async ({ request }) => {
   return new URL(request.url).searchParams.get("message");
@@ -73,44 +74,59 @@ export default function Login() {
   const message = useLoaderData();
 
   return (
-    <div className="bg-blue-50 h-screen flex items-center justify-center flex-col">
-      <h4 className="text-4xl text-center my-4 font-bold">Login</h4>
+    <main className="md:mx-6 mx-4 main-auth">
+      <Logo />
+      <div className="flex py-2 flex-col mx-auto justify-center items-center min-h-screen">
+        <h4 className="lg:text-4xl md:text-3xl text-2xl leading-10 text-center font-semibold md:mb-4 mb-3 text-sky-500">
+          Login
+        </h4>
 
-      <DisplayError
-        error={(errorMessage && errorMessage.returnedRes) || message}
-      />
+        <p className="font-semibold lg:text-lg md:text-base text-sm text-center">
+          Welcome back you’ve been missed!
+        </p>
 
-      <Form method="post" className="w-full px-6 mb-12" replace>
-        {inputs.map((inputData) => (
-          <Input
-            {...inputData}
-            key={inputData.id}
-            errorMessage={errorMessage && errorMessage.ValidationErrors}
-          />
-        ))}
-        <button
-          type="submit"
-          className="bg-blue-500 text-white block w-full rounded-md p-2"
-          disabled={navigation.state === "submitting"}
+        <DisplayError
+          error={(errorMessage && errorMessage.returnedRes) || message}
+        />
+
+        <Form
+          method="post"
+          className="lg:w-1/2 md:w-2/3 sm:w-3/4 w-full mx-auto"
+          replace
         >
-          {navigation.state === "submitting" ? "Logging in ..." : "Login"}
-        </button>
+          <div className="profile py-2 flex flex-col justify-center">
+            {inputs.map((inputData) => (
+              <Input
+                {...inputData}
+                key={inputData.id}
+                errorMessage={errorMessage && errorMessage.ValidationErrors}
+              />
+            ))}
+            <button
+              type="submit"
+              className="w-full px-3 py-2 lg:text-2xl md:text-xl text-lg text-white rounded-lg mt-4 bg-sky-500"
+              disabled={navigation.state === "submitting"}
+            >
+              {navigation.state === "submitting" ? "Logging in ..." : "Login"}
+            </button>
+          </div>
 
-        <div className="text-center py-4">
-          <span className="text-gray-500">
-            Not a Member?
-            <Link to="/register" className="text-red-500 pl-1">
-              Register Now
+          <div className="text-center py-2 md:text-base text-sm">
+            <span className="text-gray-800 tracking-tight">
+              Not a Member?
+              <Link to="/register" className="text-red-600 pl-1">
+                Register Now
+              </Link>
+            </span>
+          </div>
+
+          <div className="text-center mt-1 md:text-base text-sm">
+            <Link to="/recovery-email-send" className="text-red-600 pl-1">
+              Forget password?
             </Link>
-          </span>
-        </div>
-
-        <div className="text-center py-4">
-          <Link to="/recovery-email-send" className="text-red-500 pl-1">
-            Forget password?
-          </Link>
-        </div>
-      </Form>
-    </div>
+          </div>
+        </Form>
+      </div>
+    </main>
   );
 }

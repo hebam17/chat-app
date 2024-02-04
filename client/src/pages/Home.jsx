@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import homeBg from "../assets/messages.jpg";
 export default function Home() {
   return (
-    <div className="flex flex-col h-screen home-bg">
+    <div className="flex flex-col h-screen home-bg m-0">
       <div className="flex-1 flex-grow text-right">
         <Link
           to="/login"
@@ -10,23 +10,17 @@ export default function Home() {
         >
           Login
         </Link>
-        {/* <img
-          src={homeBg}
-          alt="people sending messages"
-          height="100%"
-          width="100%"
-        /> */}
       </div>
 
       <div className="flex-1 flex items-center flex-col md:mt-0 mt-2 lg:px-2 md:px-4 px-5">
-        <h1 className="lg:text-4xl md:text-3xl text-2xl leading-10 text-center text-black font-semibold">
+        <h1 className="lg:text-4xl md:text-3xl text-2xl leading-10 text-center font-semibold">
           Stay connected with your friends and family
         </h1>
-        <div className="text-center flex justify-center md:my-6 my-4">
+        <div className="text-center flex justify-center items-center gap-1 md:my-6 my-4">
           <span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              fill="#00FFA3"
+              fill="#06b6d4"
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
@@ -39,19 +33,18 @@ export default function Home() {
               />
             </svg>
           </span>
-          <h3 className="text-black font-semibold  lg:text-lg md:text-base text-sm ">
+          <h3 className="font-semibold  lg:text-lg md:text-base text-sm ">
             Secure, private messaging
           </h3>
         </div>
         <Link
           to="/register"
-          className="font-semibold py-4 md:px-20 px-16 bg-white rounded-full start-btn lg:text-xl md:text-lg text-base d-block"
+          className="font-semibold md:py-4 md:px-20 sm:px-16 px-12 py-3 bg-white rounded-full start-btn lg:text-xl md:text-lg text-base d-block"
         >
           Get Started
         </Link>
-
-        <div></div>
       </div>
+      <div className="py-1 w-1/4 mx-auto my-0 bg-black rounded-full"></div>
     </div>
   );
 }

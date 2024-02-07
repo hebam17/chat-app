@@ -63,7 +63,7 @@ export const verifyOTP = async ({ username, code }) => {
     const { data, status } = await axios.post("/verifyOTP", { username, code });
     return { data, status };
   } catch (error) {
-    throw new Error(error.response.data.error);
+    throw new Error(error.response?.data.error);
   }
 };
 

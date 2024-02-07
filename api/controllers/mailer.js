@@ -3,18 +3,20 @@ const Mailgen = require("mailgen");
 
 require("dotenv").config();
 
-// https://ethereal.email/create
-let nodeConfig = {
-  host: "smtp.ethereal.email",
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  host: "smtp.gmail.com",
   port: 587,
-  secure: false, // true for 465, false for other ports
+  secure: false,
   auth: {
-    user: process.env.EMAIL, // generated ethereal user
-    pass: process.env.EMAIL_PASSWORD, // generated ethereal password
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASSWORD,
   },
-};
-
-let transporter = nodemailer.createTransport(nodeConfig);
+  tls: {
+    // do not fail on invalid certs
+    rejectUnauthorized: false,
+  },
+});
 
 let MailGenerator = new Mailgen({
   theme: "default",
@@ -24,24 +26,15 @@ let MailGenerator = new Mailgen({
   },
 });
 
-/** POST: http://localhost:8080/api/registerMail
- * @param: {
-  "username" : "example123",
-  "userEmail" : "admin123",
-  "text" : "",
-  "subject" : "",
-}
-*/
 const registerMail = async (req, res) => {
   const { username, userEmail, text, subject } = req.body;
 
-  // body of the email
+  //   // body of the email
   let email = {
     body: {
       name: username,
       intro:
-        text ||
-        "Welcome to Daily Tuition! We're very excited to have you on board.",
+        text || "Welcome to UChat! We're very excited to have you on board.",
       outro:
         "Need help, or have questions? Just reply to this email, we'd love to help.",
     },
@@ -49,22 +42,23 @@ const registerMail = async (req, res) => {
 
   let emailBody = MailGenerator.generate(email);
 
-  let message = {
+  const mailOptions = {
     from: process.env.EMAIL,
     to: userEmail,
-    subject: subject || "Signup Successful",
+    subject: subject,
     html: emailBody,
   };
 
-  // send mail
-  transporter
-    .sendMail(message)
-    .then(() => {
-      return res
-        .status(200)
-        .send({ msg: "You should receive an email from us." });
-    })
-    .catch((error) => res.status(500).send({ error }));
+  try {
+    await transporter.sendMail(mailOptions);
+    return res
+      .status(200)
+      .send({ msg: "You should receive an email from us." });
+  } catch (err) {
+    res
+      .status(500)
+      .send({ error: "Sorry, an error occured, please try again later!" });
+  }
 };
 
 module.exports = registerMail;

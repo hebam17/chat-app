@@ -1,10 +1,10 @@
 // register validation
+const specialCharsRegexp = /[`!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/;
+const emailRegexp = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
+const passwordRegexp = /[A-Z !@#$%.^&*()/><-]*\S{6,15}/;
+
 export const validation = (data) => {
   const errors = {};
-
-  const specialCharsRegexp = /[`!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~]/;
-  const emailRegexp = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/;
-  const passwordRegexp = /[A-Z !@#$%.^&*()/><-]*\S{6,15}/;
 
   for (let [key, value] of data) {
     if (!value.trim()) {
@@ -57,4 +57,12 @@ export const ResetPasswordValidation = (data) => {
     errors["confirmPassword"] = "Password and confirm password should match!";
   }
   return errors;
+};
+
+export const EmailValidation = (email) => {
+  if (emailRegexp.test(email)) {
+    return true;
+  } else {
+    return false;
+  }
 };

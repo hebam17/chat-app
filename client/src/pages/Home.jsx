@@ -44,7 +44,6 @@ export default function Home() {
           Get Started
         </Link>
       </div>
-      <div className="py-1 w-1/4 mx-auto my-0 bg-black rounded-full"></div>
     </div>
   );
 }

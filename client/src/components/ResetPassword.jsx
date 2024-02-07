@@ -4,6 +4,8 @@ import Input from "./Input";
 import { ResetPasswordValidation } from "../utils/validations";
 import { resetPassword } from "../utils/apiRequests";
 import axios from "axios";
+import Logo from "./Logo";
+import DisplayError from "./DisplayError";
 
 export const action = async ({ request }) => {
   const formData = await request.formData();
@@ -47,15 +49,15 @@ const inputs = [
 export default function ResetPassword() {
   const errorMessage = useActionData();
   const [err, setErr] = useState(null);
-  const navigate = useNavigate();
+  const navigation = useNavigate();
 
   useEffect(() => {
     const checkSession = async () => {
       try {
         const res = await axios.get("/createResetSession");
-        if (res.status !== 201) return navigate("/recovery-email-send");
+        if (res.status !== 201) return navigation("/recovery-email-send");
       } catch (error) {
-        return navigate(
+        return navigation(
           `/recovery-email-send?message=${error.response.data.error}`
         );
       }
@@ -65,33 +67,46 @@ export default function ResetPassword() {
   }, []);
 
   return (
-    <main className="flex flex-col justify-center items-center h-screen">
-      <h1 className="text-4xl my-3">Reset password</h1>
-      <h2 className="text-1xl">Enter the new password </h2>
+    <main className="md:mx-6 mx-4">
+      <Logo />
 
-      <p className="text-red-600 text-center text-lg">
-        {(errorMessage && errorMessage.message) || err}
-      </p>
+      <div className="flex justify-center items-center flex-col h-screen">
+        <h1 className="lg:text-4xl md:text-3xl text-2xl leading-10 text-center font-semibold md:mb-4 mb-3 text-sky-500">
+          Reset password
+        </h1>
+        <p className="font-semibold lg:text-lg md:text-base text-sm text-center mb-2">
+          Enter the new password
+        </p>
 
-      <Form method="post">
-        <div className="flex flex-col justify-center items-center">
-          <div className="flex flex-col justify-center items-left mt-3">
-            {inputs.map((inputData) => (
-              <Input
-                {...inputData}
-                key={inputData.id}
-                errorMessage={errorMessage && errorMessage.ValidationErrors}
-              />
-            ))}
-          </div>
-          <button
-            type="submit"
-            className="px-4 py-2 text-gray-800 font-semibold border border-gray-500 rounded-md"
+        {/* <p className="text-red-600 text-center text-lg">
+          {(errorMessage && errorMessage.message) || err}
+        </p> */}
+
+        <DisplayError error={(errorMessage && errorMessage.message) || err} />
+        <div className="lg:w-1/2 md:w-2/3 sm:w-3/4 w-full mx-auto">
+          <Form
+            method="post"
+            className="profile py-2 flex flex-col justify-center"
           >
-            Reset
-          </button>
+            <div className="flex flex-col justify-center items-left mt-3">
+              {inputs.map((inputData) => (
+                <Input
+                  {...inputData}
+                  key={inputData.id}
+                  errorMessage={errorMessage && errorMessage.ValidationErrors}
+                />
+              ))}
+            </div>
+            <button
+              type="submit"
+              className="w-full px-3 py-2 lg:text-2xl md:text-xl text-lg text-white rounded-lg mt-4 bg-sky-500"
+              disabled={navigation.state === "submitting"}
+            >
+              {navigation.state === "submitting" ? "reseting ..." : "reset"}
+            </button>
+          </Form>
         </div>
-      </Form>
+      </div>
     </main>
   );
 }

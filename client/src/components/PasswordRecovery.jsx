@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { generateOTP, getUser, verifyOTP } from "../utils/apiRequests";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import axios from "axios";
+import Logo from "./Logo";
+import DisplayError from "./DisplayError";
 
 export default function PasswordRecovery() {
   const [OTP, setOTP] = useState("");
@@ -19,7 +21,7 @@ export default function PasswordRecovery() {
     setError(null);
     try {
       const username = searchParams.get("username");
-      if (!OTP) throw new Error("Please write the OTP first");
+      if (!OTP) throw new Error("Please write the code first");
       const { status } = await verifyOTP({
         username,
         code: OTP,
@@ -36,41 +38,49 @@ export default function PasswordRecovery() {
   }, [OTP]);
 
   return (
-    <main className="flex flex-col justify-center items-center h-screen">
-      <h1 className="leading-5">
-        Enter the 6 digits sent to your email address
-      </h1>
+    <main className="md:mx-6 mx-4">
+      <Logo />
+      <div className="flex justify-center items-center flex-col h-screen">
+        <h1 className="lg:text-4xl md:text-3xl text-2xl leading-10 text-center font-semibold md:mb-4 mb-3 text-sky-500">
+          Confirm Your Email
+        </h1>
 
-      <p className="text-red-600 text-center text-lg">{error}</p>
+        <p className="font-semibold lg:text-lg md:text-base text-sm text-center mb-2">
+          We’ve sent 5 digits verification code to your email
+        </p>
 
-      <form method="post" onSubmit={handleSubmit}>
-        <div className="flex flex-col justify-center items-center">
-          <input
-            type="text"
-            name="otp"
-            id="otp"
-            onChange={handleChange}
-            placeholder="Enter the numbers here"
-            className="w-50 my-2 p-2 rounded-md border border-gray-200 focus:border-blue-300 focus:outline-none "
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 text-gray-800 font-semibold border border-gray-500 rounded-md"
-          >
-            Verify
-          </button>
+        <DisplayError error={error} />
+
+        <form method="post" onSubmit={handleSubmit}>
+          <div className="flex flex-col justify-center items-center">
+            <input
+              type="text"
+              name="otp"
+              id="otp"
+              onChange={handleChange}
+              placeholder="code here"
+              className="w-full my-1 px-3 py-2 rounded-lg bg-sky-50 focus:outline-sky-500 focus:border-none lg:text-lg md:text-base text-sm"
+              autoComplete="off"
+            />
+            <button
+              type="submit"
+              className="w-full px-3 py-2 lg:text-2xl md:text-xl text-lg text-white rounded-lg mt-4 bg-sky-500"
+            >
+              Verify
+            </button>
+          </div>
+        </form>
+        <div className="text-center pt-4 md:text-base text-sm">
+          <span className="text-gray-800 tracking-tight">
+            Cannot get the number?
+            <button
+              onClick={() => navigate("/recovery-email-send")}
+              className="text-red-500 pl-1"
+            >
+              Resend
+            </button>
+          </span>
         </div>
-      </form>
-      <div className="text-center py-4">
-        <span className="text-gray-500">
-          Cannot get the number?
-          <button
-            onClick={() => navigate("/recovery-email-send")}
-            className="text-red-500 pl-1"
-          >
-            Resend
-          </button>
-        </span>
       </div>
     </main>
   );

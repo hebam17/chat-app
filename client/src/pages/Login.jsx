@@ -56,14 +56,14 @@ const inputs = [
     id: "username",
     type: "text",
     inputName: "username",
-    placeholder: "Enter your username",
+    placeholder: "Username",
     inputLabel: "Username",
   },
   {
     id: "password",
     type: "password",
     inputName: "password",
-    placeholder: "Enter your password",
+    placeholder: "Password",
     inputLabel: "Password",
   },
 ];
@@ -77,9 +77,9 @@ export default function Login() {
     <main className="md:mx-6 mx-4 main-auth">
       <Logo />
       <div className="flex py-2 flex-col mx-auto justify-center items-center min-h-screen">
-        <h4 className="lg:text-4xl md:text-3xl text-2xl leading-10 text-center font-semibold md:mb-4 mb-3 text-sky-500">
+        <h1 className="lg:text-4xl md:text-3xl text-2xl leading-10 text-center font-semibold md:mb-4 mb-3 text-sky-500">
           Login
-        </h4>
+        </h1>
 
         <p className="font-semibold lg:text-lg md:text-base text-sm text-center">
           Welcome back you’ve been missed!

@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 const { validationResult } = require("express-validator");
+const Conversation = require("../models/Conversation");
+const Message = require("../models/Message");
 require("dotenv").config();
 
 // REGISTER
@@ -238,9 +240,18 @@ const authenticate = async (req, res) => {
 
 // get all users
 const getAllUsers = async (req, res) => {
-  const users = await User.find({}, { _id: 1, username: 1 });
+  const { convs } = req.body;
+  try {
+    const users = await User.find({}, { _id: 1, username: 1 });
 
-  return res.json(users);
+    // get the last message in every conversation here >>>
+
+    return res.status(200).send({ users });
+  } catch (error) {
+    return res
+      .status(500)
+      .send({ error: "an error occured, please try again later!" });
+  }
 };
 
 exports.register = register;

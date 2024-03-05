@@ -52,7 +52,7 @@ router.route("/profile").get(authControllers.getUser); //profile
 
 router.route("/createResetSession").get(authControllers.createResetSession); //reset all variables
 // get all people from db
-router.route("/users").get(Auth, authControllers.getAllUsers);
+router.route("/users").post(Auth, authControllers.getAllUsers);
 
 // PUT ROUTES
 router.route("/updateuser").put(Auth, authControllers.updateUser); //update user profile

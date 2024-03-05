@@ -27,6 +27,7 @@ import Contact from "./components/Contact";
 import Home from "./pages/Home";
 import { UserContext } from "./context/UserContext";
 import { useContext } from "react";
+import UserChat from "./pages/UserChat";
 
 function App() {
   const userContextData = useContext(UserContext);
@@ -43,7 +44,9 @@ function App() {
               element={<Chat />}
               loader={chatLoader(userContextData)}
               errorElement={<ErrorMessage />}
-            />
+            >
+              <Route path=":convName" element={<UserChat />} />
+            </Route>
             <Route
               path="/contact/:username"
               element={<Contact />}

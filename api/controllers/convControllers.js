@@ -7,7 +7,6 @@ const getConv = async (req, res) => {
 
   try {
     const userConv = await User.findById(userId).populate("conv");
-    // console.log("userConv:", userConv.conv);
     return res
       .status(200)
       .json({ convs: userConv.conv, friends: userConv.friends });
@@ -34,14 +33,16 @@ const addConv = async (req, res) => {
         .send({ error: "This user is already in your contacts" });
     }
 
-    const newConv = await Conversation.create({
-      isPrivate: isPrivate,
-      name,
-      users: [...users, userId],
-      admin: null,
-    });
+    let newConv;
 
     if (isPrivate) {
+      newConv = await Conversation.create({
+        isPrivate: isPrivate,
+        name,
+        users: [...users, userId],
+        admin: null,
+      });
+
       let otherUser = users[0];
       await User.updateOne(
         { _id: userId },
@@ -54,6 +55,12 @@ const addConv = async (req, res) => {
     }
 
     if (!isPrivate) {
+      newConv = await Conversation.create({
+        isPrivate: isPrivate,
+        name,
+        users: [...users, userId],
+        admin: userId,
+      });
       [...users, userId].forEach(async (user) => {
         await User.updateOne(
           { _id: user },
@@ -80,7 +87,7 @@ const deleteConv = async (req, res) => {
       const conv = await Conversation.findById(convId);
 
       if (conv.isPrivate) {
-        await Conversation.deleteOne({ _id: convId });
+        await Conversation.findByIdAndDelete(convId);
         let otherUser = conv.users.filter((user) => user !== userId)[0];
         await User.updateOne(
           { _id: userId },
@@ -90,10 +97,6 @@ const deleteConv = async (req, res) => {
           { _id: otherUser },
           { $pull: { friends: userId, conv: convId } }
         );
-
-        return res
-          .status(200)
-          .send("The conversation was successfully removed");
       }
 
       if (!conv.isPrivate) {
@@ -105,14 +108,14 @@ const deleteConv = async (req, res) => {
             .send("You are successfully removed from the group");
         }
 
-        await Conversation.deleteOne({ _id: convId });
+        await Conversation.findByIdAndDelete(convId);
 
         [...conv.users, userId].forEach(async (user) => {
           await User.updateOne({ _id: user }, { $pull: { conv: convId } });
         });
       }
 
-      await Message.deleteMany({ conv: convId });
+      const data = await Message.deleteMany({ conv: convId });
 
       return res.status(200).json("The conversation was successfully deleted!");
     }

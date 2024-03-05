@@ -5,7 +5,7 @@ const ConversationSchema = new mongoose.Schema(
     isPrivate: { type: Boolean, default: true },
     name: {
       type: String,
-      unique: [true, "Please provide a unique username"],
+      unique: [true, "Please provide a unique name"],
     },
     // users: [{ userId: {}, TotalUnread: { type: Number } }],
     users: [

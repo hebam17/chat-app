@@ -106,8 +106,6 @@ wss.on("connection", (connection, req) => {
     const messageData = JSON.parse(message.toString());
 
     const { conv, text, file, users } = messageData;
-    // console.log(messageData);
-    console.log("file:", file);
     let filename = null;
 
     if (file) {
@@ -115,11 +113,9 @@ wss.on("connection", (connection, req) => {
       const ext = nameArr[nameArr.length - 1];
       filename = Date.now() + `.${ext}`;
       const filePath = __dirname + "/uploads/" + filename;
-      // console.log(filePath);
       const fileBuffer = Buffer.from(file.data.split(",")[1], "base64");
       fs.writeFile(filePath, fileBuffer, (err) => {
         if (err) console.log("err:", err);
-        console.log("done!");
       });
     }
 

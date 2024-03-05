@@ -8,15 +8,27 @@ import ContactUser from "../components/ContactUser";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css";
 
+import UserIdCard from "../components/UserIdCard";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+
 export const loader =
   (userContextData) =>
   async ({ request }) => {
-    const { convs, setConvs, setFriends, friends } = userContextData;
+    const { username, convs, setConvs, setFriends, friends } = userContextData;
 
     if (convs === null) {
       try {
         const res = await axios.get("/convs/getConvs");
         const data = res.data;
+        // split the conv name to only display the other person name => in case of private convs
+        data?.convs.forEach((conv) => {
+          conv.isConv = true;
+          if (conv.isPrivate) {
+            conv.name = conv.name
+              .split("-")
+              .filter((user) => user !== username)[0];
+          }
+        });
         setConvs(data?.convs);
         setFriends(data?.friends);
       } catch (err) {
@@ -31,6 +43,7 @@ export default function Chat() {
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   const [users, setUsers] = useState([]);
+  const navigate = useNavigate();
 
   const {
     username,
@@ -46,15 +59,23 @@ export default function Chat() {
   const [currentContact, setCurrentContact] = useState(null);
   const [error, setError] = useState(null);
   const [newMessage, setNewMessage] = useState("");
+  const [type, setType] = useState("friends");
   const [messages, setMessages] = useState([]);
   const [createGroup, setCreateGroup] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [group, setGroup] = useState([]);
+  const [searchUser, setSearchUser] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [chatOpen, setChatOpen] = useState(false);
   const msgRef = useRef();
 
   useEffect(() => {
     wsConnection();
-  }, []);
+  }, [groupName]);
+
+  useEffect(() => {
+    setFilteredUsers(searchUserFilter(searchUser));
+  }, [searchUser, users]);
 
   let wsInstance = null;
 
@@ -75,8 +96,8 @@ export default function Chat() {
   };
 
   useEffect(() => {
-    axios.get("/users").then((res) => {
-      setUsers(res.data);
+    axios.post("/users", { convs: convs }).then((res) => {
+      setUsers(res.data.users);
     });
   }, [onlineUsers]);
 
@@ -122,7 +143,7 @@ export default function Chat() {
       users[userId] = username;
     });
 
-    setOnlineUsers(users);
+    setOnlineUsers(users ?? []);
   };
 
   const sendMessage = (e, file = null) => {
@@ -204,7 +225,6 @@ export default function Chat() {
 
   // handle adding new user to the conversations list // private conversation between this user and the current user
   const handleAdding = async (username, contactname, userId, contactId) => {
-    console.log("contactname:", username, contactname, userId, contactId);
     try {
       if (!(userId === contactId)) {
         const newConv = await axios.post("/convs/addConv", {
@@ -213,9 +233,15 @@ export default function Chat() {
           // send all users other than the current user
           users: [contactId],
         });
-        setCurrentContactId(newConv._id);
+        // setCurrentContactId(newConv._id);
         setConvs((prevConvs) => [...prevConvs, newConv.data]);
         setFriends((prev) => [...prev, contactId]);
+        let newFilterdList = filteredUsers.filter(
+          (user) => user.username !== contactname
+        );
+        newConv.data["name"] = contactname;
+        newConv.data["isConv"] = true;
+        setFilteredUsers([newConv.data, ...newFilterdList]);
       }
     } catch (err) {
       console.log(err);
@@ -224,7 +250,6 @@ export default function Chat() {
 
   // adding a user to the group
   const AddingToGroup = (userID) => {
-    console.log(userID, "in");
     setGroup((prev) => [...prev, userID]);
   };
 
@@ -238,17 +263,20 @@ export default function Chat() {
     try {
       if (!groupName || group.length === 0) {
         setError("no Group was created!");
-        setCreateGroup((prev) => !prev);
-        setGroupName("");
+      } else {
+        const newConv = await axios.post("/convs/addConv", {
+          isPrivate: false,
+          name: groupName,
+          users: group,
+        });
+        newConv.data.isConv = true;
+        setConvs((prev) => [...prev, newConv.data]);
+        setFilteredUsers((prev) => [newConv.data, ...prev]);
       }
-      const newConv = await axios.post("/convs/addConv", {
-        isPrivate: false,
-        name: groupName,
-        users: group,
-      });
-      setCreateGroup((prev) => !prev);
+
       setGroupName("");
-      setConvs((prev) => [...prev, newConv]);
+      setGroup([]);
+      setCreateGroup((prev) => !prev);
     } catch (err) {
       console.log(err);
     }
@@ -257,16 +285,87 @@ export default function Chat() {
   const removeConv = async (convID, isPrivate, users) => {
     try {
       await axios.get(`/convs/deleteConv/${convID}`);
-      setConvs((convs) => convs.filter((conv) => conv._id !== convID));
+      let newConvsList = convs.filter((conv) => conv._id !== convID);
+      setConvs(newConvsList);
+      // if it's a private conv
       if (isPrivate) {
         const convFriend = users.filter((user) => user !== id)[0];
-        setFriends((friends) =>
-          friends.filter((friend) => friend !== convFriend)
+        // remove the user from the friends and contacts list
+        let newFriendsList = friends.filter((friend) => friend !== convFriend);
+        setFriends(newFriendsList);
+        let newFilterdList = filteredUsers.filter(
+          (user) => user._id !== convID
         );
+
+        setFilteredUsers([
+          { _id: convFriend, username: currentContact.name },
+          ...newFilterdList,
+        ]);
+      } else {
+        let newFilterdList = filteredUsers.filter(
+          (user) => user._id !== convID
+        );
+
+        setFilteredUsers([...newFilterdList]);
       }
     } catch (err) {
       console.log(err);
     }
+  };
+
+  // fix the unfriend proplem
+  const handleRemoveConv = () => {
+    try {
+      removeConv(
+        currentContactId,
+        currentContact.isPrivate,
+        currentContact.users
+      );
+      setChatOpen(false);
+      setCurrentContact(null);
+      setCurrentContactId(null);
+      return navigate("/chat");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const isOnline = (users) => {
+    let onlines =
+      users?.map((user) => Object.keys(onlineUsers).includes(user)) || [];
+    return onlines.every((online) => online === true);
+  };
+
+  // get user from the user list using conv
+  const getUser = (currentConv) => {
+    let members = currentConv.users.filter((user) => user !== id);
+    if (currentConv.isPrivate) {
+      members = users.filter((user) => user._id === members[0]);
+      return { isPrivate: true, members: members };
+    } else {
+      members = users.filter((user) => members.includes(user._id));
+      return { isPrivate: false, members };
+    }
+  };
+
+  // toggle the chat window
+  const toggleChat = (open) => {
+    setChatOpen(open);
+  };
+
+  const searchUserFilter = (searchFiter) => {
+    const otherUsers = users.filter(
+      (user) => !friends.includes(user._id) && user._id !== id
+    );
+    const searchList = [...convs, ...otherUsers];
+    const filteredUsers = searchList.filter((user) => {
+      return (
+        user.name?.toLowerCase().includes(searchFiter?.toLowerCase()) ||
+        user.username?.toLowerCase().includes(searchFiter?.toLowerCase())
+      );
+    });
+
+    return filteredUsers;
   };
 
   // remove the current user from his contactors list
@@ -277,148 +376,275 @@ export default function Chat() {
   const dupesFreeMessages = unique(messages, "_id");
 
   return (
-    <div className="flex h-screen">
-      <div className="bg-white w-1/3 flex flex-col">
-        <div className="flex-grow">
-          <Logo />
+    <>
+      <div className="chat flex flex-col h-screen lg:px-8 md:px-5 px-4 m-0 py-3 lg:gap-10 md:gap-8 gap-6">
+        {/* Header start */}
 
-          {convs?.map((conv) => (
-            <ContactUser
-              key={conv._id}
-              userId={conv._id}
-              online={true}
-              username={conv.name}
-              setContact={() => setContact(conv)}
-              selected={conv._id === currentContactId}
-              contact={true}
-              conv={true}
-              convUsers={conv.users}
-              privateConv={conv.isPrivate}
-              removeConv={removeConv}
-            />
-          ))}
+        <header
+          className={`flex sm:flex-row flex-col-reverse items-start gap-3 ${
+            createGroup ? "justify-between" : "justify-end"
+          }`}
+        >
+          {/* the group submittion button */}
 
-          <div className=" border border-t-green-500 my-4 py-4">
-            {!createGroup ? (
+          {!createGroup && <Logo color="white" />}
+          {createGroup && (
+            <div className="flex gap-4">
               <button
                 type="button"
-                className="bg-green-400 px-3 py-1 rounded-md text-white ml-6 mb-4"
-                onClick={() => setCreateGroup((prev) => !prev)}
-              >
-                Create new group
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="bg-green-400 px-3 py-1 rounded-md text-white ml-6 mb-4"
+                value="create group"
+                className="p-1 text-white hover:text-sky-500 font-semibold
+            hover:bg-white
+            border-2 border-white rounded-lg"
                 onClick={handleCreateGroup}
               >
                 Done
               </button>
-            )}
-            {createGroup && (
               <input
                 type="text"
-                className="bg-green-50 roudend-md p-2 my-3 mx-2"
-                onChange={(e) => setGroupName(e.target.value)}
+                name="group"
+                id={id}
                 value={groupName}
-                placeholder="Enter the group name..."
+                onChange={(e) => setGroupName(e.target.value)}
+                className="w-full my-1 px-3 py-2 rounded-lg bg-sky-50 outline-none
+                 border-none lg:text-lg md:text-base text-sm font-semibold"
+                autoComplete="off"
+                placeholder="group name..."
               />
-            )}
-
-            {users?.map((user) => {
-              if (!friends.includes(user._id) && user._id !== id) {
-                return (
-                  <ContactUser
-                    key={user._id}
-                    userId={user._id}
-                    online={true}
-                    username={user.username}
-                    createGroup={createGroup}
-                    handleAdding={(contactname, contactId) =>
-                      handleAdding(username, contactname, id, contactId)
-                    }
-                    AddingToGroup={AddingToGroup}
-                    removingFromGroup={removingFromGroup}
-                  />
-                );
-              } else if (user._id !== id) {
-                return (
-                  <ContactUser
-                    key={user._id}
-                    userId={user._id}
-                    online={true}
-                    username={user.username}
-                    contact={true}
-                    createGroup={createGroup}
-                    AddingToGroup={AddingToGroup}
-                    removingFromGroup={removingFromGroup}
-                  />
-                );
-              }
-            })}
-          </div>
-        </div>
-
-        <div className="p-2 text-center flex gap-2 justify-center items-center">
-          <span className="mr-2 text-sm text-gray-600 flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              className="w-4 h-4"
-            >
-              <path
-                fillRule="evenodd"
-                d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
-                clipRule="evenodd"
-              />
-            </svg>
-
-            {username}
-          </span>
-          <button
-            onClick={logout}
-            className="text-sm text-gray-500 bg-green-100 py-2 px-3 border rounded-md"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-      <div className="flex flex-col bg-green-100 w-2/3 overflow-hidden py-2">
-        <div className="flex-grow">
-          {error && <DisplayError error={error} />}
-
-          {!currentContactId && (
-            <div className="flex h-full items-center justify-center">
-              <div className="text-gray-400">&larr; Select a person</div>
             </div>
           )}
 
-          {currentContactId && (
-            <div className="h-full relative">
+          <div className="flex gap-4">
+            <button
+              type="button"
+              value="create group"
+              className="p-1 text-white hover:text-sky-500 font-semibold
+            hover:bg-white
+            border-2 border-white rounded-lg"
+              onClick={() => setCreateGroup((prev) => !prev)}
+            >
+              {createGroup ? "undo" : "Create group"}
+            </button>
+
+            <button
+              type="button"
+              onClick={logout}
+              value="logout"
+              className="p-1 text-white font-semibold italic border-b-2 border-white"
+            >
+              Logout
+            </button>
+          </div>
+        </header>
+
+        {/* Header end */}
+
+        {/* Main start */}
+        <main
+          className={`flex md:flex-row flex-col md:justify-center items-center flex-1 min-h-0`}
+        >
+          {/* Side bar */}
+          <div
+            className={`bg-white rounded-md p-1 flex flex-col h-full ${
+              chatOpen
+                ? "border md:border-r-2 border-r-0 border-gray-2 md:w-1/3 w-full  md:rounded-r-none md:flex hidden"
+                : "lg:w-1/3 md:w-2/3 w-full"
+            }`}
+          >
+            <div className="side-header">
+              <h1 className="my-4 mx-3 font-semibold text-black lg:text-xl md:text-lg text-base ">
+                Welcome back,{" "}
+                <span className="font-bold text-sky-500">{username}</span>
+              </h1>
+
+              <div className="search p-3 flex items-center gap-2 bg-white rounded-lg text-base mb-3 mx-3 border border-gray-300 focus-within:border-sky-500">
+                <span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-6 h-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                    />
+                  </svg>
+                </span>
+                <input
+                  type="search"
+                  name="find friend"
+                  placeholder="Search users"
+                  id="search-user"
+                  className="bg-white border-0 focus:border-0 active:border-0 outline-none w-full font-semibold"
+                  value={searchUser}
+                  onChange={(e) => {
+                    setSearchUser(e.target.value);
+                  }}
+                />
+              </div>
+              <div className="flex justify-around mb-3">
+                <button
+                  type="button"
+                  onClick={(e) => setType(e.target.value)}
+                  value="friends"
+                  className={`p-1 rounded-lg border border-gray-300 font-semibold italic ${
+                    type === "friends"
+                      ? "bg-sky-500 text-white"
+                      : "bg-white text-black"
+                  }`}
+                >
+                  Friends
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => setType(e.target.value)}
+                  value="all"
+                  className={`p-1 rounded-lg border border-gray-300 font-semibold italic ${
+                    type === "all"
+                      ? "bg-sky-500 text-white"
+                      : "bg-white text-black"
+                  }`}
+                >
+                  All users
+                </button>
+              </div>
+            </div>
+
+            {/* render the users after filterd by search results */}
+            <div className="flex flex-col bg-white overflow-y-auto">
+              {filteredUsers.length > 0 &&
+                filteredUsers.map((fUser) => {
+                  if (fUser.isConv) {
+                    return (
+                      <ContactUser
+                        key={fUser._id}
+                        userId={fUser._id}
+                        selected={fUser._id === currentContactId}
+                        username={fUser.name}
+                        online={isOnline(fUser.users)}
+                        contact={true}
+                        conv={true}
+                        privateConv={fUser.isPrivate}
+                        convUsers={fUser.users}
+                        setContact={() => setContact(fUser)}
+                        AddingToGroup={AddingToGroup}
+                        removingFromGroup={removingFromGroup}
+                        removeConv={removeConv}
+                        toggleChat={toggleChat}
+                        createGroup={createGroup}
+                      />
+                    );
+                  } else {
+                    return (
+                      type === "all" && (
+                        <ContactUser
+                          key={fUser._id}
+                          userId={fUser._id}
+                          username={fUser.username}
+                          online={Object.keys(onlineUsers).includes(fUser._id)}
+                          handleAdding={(contactname, contactId) =>
+                            handleAdding(username, contactname, id, contactId)
+                          }
+                          createGroup={createGroup}
+                          AddingToGroup={AddingToGroup}
+                          removingFromGroup={removingFromGroup}
+                          deleteConv={type === "delete"}
+                        />
+                      )
+                    );
+                  }
+                })}
+            </div>
+          </div>
+
+          {/* Side bar end */}
+
+          {/* messages */}
+
+          {/* only open the message window when the chatOpen == true */}
+
+          {chatOpen && currentContactId && (
+            <div className="flex-1 flex flex-col rounded-md md:rounded-l-none h-full bg-white">
+              {/* <Outlet /> */}
+              {/* top bar */}
+              <div className="flex justify-between p-1 m-0 rounded-t-md md:rounded-l-none border border-b-2 border-gray-100 px-4 items-center">
+                <span
+                  className="text-base font-bold hover:text-sky-500 cursor-pointer"
+                  onClick={() => {
+                    setChatOpen(false);
+                    setCurrentContact(null);
+                    setCurrentContactId(null);
+                  }}
+                >
+                  <Link to=".." relative="path">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-6 h-6"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
+                      />
+                    </svg>
+                  </Link>
+                </span>
+                <div className="relative delete-conv cursor-pointer">
+                  <button
+                    type="button"
+                    className="bg-red-400 px-3 py-1 text-white font-semibold italic rounded-lg"
+                    onClick={handleRemoveConv}
+                  >
+                    unFriend
+                  </button>
+
+                  <p
+                    className={`bg-black text-white text-sm delete-tip absolute rounded-lg top-10 shadow-md left-0 px-2 py-1`}
+                  >
+                    unfollow and delete the entire chat
+                  </p>
+                </div>
+
+                <UserIdCard
+                  friends={getUser(currentContact)}
+                  onlineUsers={onlineUsers}
+                />
+              </div>
+
+              {/* top bar end */}
+
+              {/* messages */}
               <div
                 id="message-container"
-                className="overflow-y-auto absolute inset-0 p-2"
+                className="flex flex-col flex-1 p-2 overflow-auto"
               >
                 {dupesFreeMessages.length === 0 && (
-                  <div className="flex h-full items-center justify-center">
-                    <div className="text-gray-400">&larr; Start chat</div>
+                  <div className="flex items-center justify-center text-gray-400 h-full">
+                    &larr; Start chat
                   </div>
                 )}
+
                 {dupesFreeMessages.map((message) => (
                   <div
                     key={message._id}
-                    className={
+                    className={`border-black ${
                       message.sender === id
                         ? "text-left mr-6 sm:mr-4 lg:mr-8"
                         : "text-right ml-6 sm:mr-4 lg:ml-8"
-                    }
+                    }`}
                   >
                     <div
-                      className={` text-left inline-block p-2 my-2 rounded-md text-md ${
+                      className={`text-left inline-block p-2 my-2 rounded-md text-md ${
                         message.sender === id
-                          ? "bg-green-500 text-white"
+                          ? "bg-sky-500 text-white"
                           : "bg-white text-gray-700"
                       }`}
                     >
@@ -444,64 +670,66 @@ export default function Chat() {
 
                 <div id="anchor" className="h-2" ref={msgRef}></div>
               </div>
+              {/* messages end */}
+
+              {/* // Send message input */}
+              <form className="flex gap-2" onSubmit={sendMessage}>
+                <input
+                  type="text"
+                  className="flex-grow border bg-white p-2 rounded-sm"
+                  placeholder="Type your message here"
+                  name="message"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                />
+                <label className="bg-gray-200 text-gray-500 p-2 rounded-sm border border-gray-300 cursor-pointer">
+                  <input
+                    type="file"
+                    name="file"
+                    id="file"
+                    className="hidden"
+                    onChange={sendFile}
+                  />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="w-6 h-6"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18.97 3.659a2.25 2.25 0 00-3.182 0l-10.94 10.94a3.75 3.75 0 105.304 5.303l7.693-7.693a.75.75 0 011.06 1.06l-7.693 7.693a5.25 5.25 0 11-7.424-7.424l10.939-10.94a3.75 3.75 0 115.303 5.304L9.097 18.835l-.008.008-.007.007-.002.002-.003.002A2.25 2.25 0 015.91 15.66l7.81-7.81a.75.75 0 011.061 1.06l-7.81 7.81a.75.75 0 001.054 1.068L18.97 6.84a2.25 2.25 0 000-3.182z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </label>
+
+                <button
+                  className="bg-sky-500 p-2 text-white rounded-sm"
+                  type="submit"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-6 h-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+                    />
+                  </svg>
+                </button>
+              </form>
             </div>
           )}
-        </div>
+        </main>
 
-        {currentContactId && (
-          <form className="flex gap-2" onSubmit={sendMessage}>
-            <input
-              type="text"
-              className="flex-grow border bg-white p-2 rounded-sm"
-              placeholder="Type your message here"
-              name="message"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-            />
-            <label className="bg-gray-200 text-gray-500 p-2 rounded-sm border border-gray-300 cursor-pointer">
-              <input
-                type="file"
-                name="file"
-                id="file"
-                className="hidden"
-                onChange={sendFile}
-              />
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M18.97 3.659a2.25 2.25 0 00-3.182 0l-10.94 10.94a3.75 3.75 0 105.304 5.303l7.693-7.693a.75.75 0 011.06 1.06l-7.693 7.693a5.25 5.25 0 11-7.424-7.424l10.939-10.94a3.75 3.75 0 115.303 5.304L9.097 18.835l-.008.008-.007.007-.002.002-.003.002A2.25 2.25 0 015.91 15.66l7.81-7.81a.75.75 0 011.061 1.06l-7.81 7.81a.75.75 0 001.054 1.068L18.97 6.84a2.25 2.25 0 000-3.182z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </label>
-
-            <button
-              className="bg-green-500 p-2 text-white rounded-sm"
-              type="submit"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
-                />
-              </svg>
-            </button>
-          </form>
-        )}
+        {/* Main end */}
       </div>
-    </div>
+    </>
   );
 }

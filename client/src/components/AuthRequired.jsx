@@ -20,6 +20,6 @@ export function AuthDenied() {
   const { username } = useContext(UserContext);
   const navigate = useNavigate();
 
-  if (username) return navigate(-1);
+  if (username) return navigate("/");
   if (!username) return <Outlet />;
 }

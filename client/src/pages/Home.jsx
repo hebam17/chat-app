@@ -1,15 +1,35 @@
 import { Link } from "react-router-dom";
 import homeBg from "../assets/messages.jpg";
+import { UserContext } from "../context/UserContext";
+import { useContext } from "react";
 export default function Home() {
+  const { username } = useContext(UserContext);
   return (
     <div className="flex flex-col h-screen home-bg m-0">
       <div className="flex-1 flex-grow text-right">
-        <Link
-          to="/login"
-          className="font-semibold inline-block mt-4 mr-4 lg:text-lg text-base"
-        >
-          Login
-        </Link>
+        {username ? (
+          <div className="flex gap-2 justify-end">
+            <Link
+              to="/logout"
+              className="font-semibold inline-block mt-4 mr-4 lg:text-lg text-base hover:text-sky-500"
+            >
+              Logout
+            </Link>
+            <Link
+              to="/chat"
+              className="font-semibold inline-block mt-4 mr-4 lg:text-lg text-base hover:text-sky-500 underline"
+            >
+              Chat
+            </Link>
+          </div>
+        ) : (
+          <Link
+            to="/login"
+            className="font-semibold inline-block mt-4 mr-4 lg:text-lg text-base hover:text-sky-500"
+          >
+            Login
+          </Link>
+        )}
       </div>
 
       <div className="flex-1 flex items-center flex-col md:mt-0 mt-2 lg:px-2 md:px-4 px-5">

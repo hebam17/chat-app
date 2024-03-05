@@ -1,19 +1,27 @@
-export default function Logo() {
+import { Link } from "react-router-dom";
+
+export default function Logo({ color }) {
   return (
-    <div className="text-sky-600 font-bold flex gap-1 lg:m-5 md:m-4 m-2 fixed top-0 left-0">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        className="w-6 h-6"
+    <Link to="/">
+      <div
+        className={`${
+          color ? "text-" + color : "text-sky-600"
+        } font-bold flex gap-1 lg:m-5 md:m-4 m-2 fixed top-0 left-0`}
       >
-        <path
-          fillRule="evenodd"
-          d="M5.337 21.718a6.707 6.707 0 01-.533-.074.75.75 0 01-.44-1.223 3.73 3.73 0 00.814-1.686c.023-.115-.022-.317-.254-.543C3.274 16.587 2.25 14.41 2.25 12c0-5.03 4.428-9 9.75-9s9.75 3.97 9.75 9c0 5.03-4.428 9-9.75 9-.833 0-1.643-.097-2.417-.279a6.721 6.721 0 01-4.246.997z"
-          clipRule="evenodd"
-        />
-      </svg>
-      UChat
-    </div>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill={color ?? `currentColor`}
+          className="w-6 h-6"
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.337 21.718a6.707 6.707 0 01-.533-.074.75.75 0 01-.44-1.223 3.73 3.73 0 00.814-1.686c.023-.115-.022-.317-.254-.543C3.274 16.587 2.25 14.41 2.25 12c0-5.03 4.428-9 9.75-9s9.75 3.97 9.75 9c0 5.03-4.428 9-9.75 9-.833 0-1.643-.097-2.417-.279a6.721 6.721 0 01-4.246.997z"
+            clipRule="evenodd"
+          />
+        </svg>
+        UChat
+      </div>
+    </Link>
   );
 }

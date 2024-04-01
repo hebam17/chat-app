@@ -34,13 +34,13 @@ export default function Avatar({ online = false, profile, isCard = false }) {
         />
       )}
 
-      {!isCard && online && (
+      {online && (
         <div
           className="absolute w-3 h-3 bg-green-400 bottom-0 rounded-full border border-white"
           style={{ right: "-.4rem" }}
         ></div>
       )}
-      {isCard && !online && (
+      {!online && (
         <div
           className="absolute w-3 h-3 bg-gray-400 bottom-0 rounded-full border border-white"
           style={{ right: "-.4rem" }}

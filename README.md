@@ -10,17 +10,29 @@
 - JWT
 - and more
 
-## What to expect
+## Current features
 
-- user authentication
-- user profile page
-- online indicator
-- live chat
-- upload images
-- and more
+- Add users => to be contacts
+- Create group chats
+- Also delete contacts
+- auth
+
+## upcoming features
+
+- More advanced auth system
+- profile page with the appility to upload photo
+- add the ability to block a user
+- add the ability to remove / update a single message
+- etc
 
 ## Branches
 
 - main => will have all these features
 - authjwt => will have a more advanced JWT auth system
-- Router => will implement React router to the app
+
+![login-page](./proShots/login-page.png)
+![users-list](./proShots/users-list.png)
+![contacts](./proShots/contacts.png)
+![chat](./proShots/chat.png)
+![create-group](./proShots/create-group.png)
+![search-user](./proShots/search-user.png)

@@ -5,7 +5,15 @@ const MessageSchema = new mongoose.Schema(
     conv: { type: mongoose.Schema.Types.ObjectId, ref: "Conversation" },
     sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     text: String,
-    read: { type: Boolean, default: false },
+    read: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      ],
+      default: [],
+    },
     file: String,
   },
   { timestamps: true }

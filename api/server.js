@@ -125,8 +125,11 @@ wss.on("connection", (connection, req) => {
         sender: connection.userId,
         text: text,
         file: filename || null,
+        read: [connection.userId],
       });
+
       // get the conv users first
+
       [...wss.clients]
         .filter((user) => users.includes(user.userId))
         .forEach((user) =>
@@ -137,6 +140,7 @@ wss.on("connection", (connection, req) => {
               sender: connection.userId,
               _id: messageDoc._id,
               file: filename || null,
+              createdAt: messageDoc.createdAt,
             })
           )
         );

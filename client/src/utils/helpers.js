@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export const unique = (arr, by) => {
   let newArr = [];
   arr.forEach((elem) => {
@@ -6,4 +8,16 @@ export const unique = (arr, by) => {
     }
   });
   return newArr;
+};
+
+// log user out
+export const logout = async (setWs, setId, setUsername) => {
+  try {
+    await axios.post("/logout");
+    setWs(null);
+    setId(null);
+    setUsername(null);
+  } catch (error) {
+    console.log(error.response.data.error);
+  }
 };

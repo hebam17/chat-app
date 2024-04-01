@@ -1,20 +1,25 @@
 import { Link } from "react-router-dom";
-import homeBg from "../assets/messages.jpg";
 import { UserContext } from "../context/UserContext";
 import { useContext } from "react";
+import { logout } from "../utils/helpers";
+
 export default function Home() {
-  const { username } = useContext(UserContext);
+  const { username, setWs, setId, setUsername } = useContext(UserContext);
   return (
     <div className="flex flex-col h-screen home-bg m-0">
+      {/* header */}
       <div className="flex-1 flex-grow text-right">
         {username ? (
-          <div className="flex gap-2 justify-end">
-            <Link
-              to="/logout"
+          <div className="flex gap-2 sm:justify-end justify-around">
+            <button
+              type="button"
+              onClick={() => logout(setWs, setId, setUsername)}
+              value="logout"
               className="font-semibold inline-block mt-4 mr-4 lg:text-lg text-base hover:text-sky-500"
             >
               Logout
-            </Link>
+            </button>
+
             <Link
               to="/chat"
               className="font-semibold inline-block mt-4 mr-4 lg:text-lg text-base hover:text-sky-500 underline"
@@ -32,6 +37,7 @@ export default function Home() {
         )}
       </div>
 
+      {/* main content */}
       <div className="flex-1 flex items-center flex-col md:mt-0 mt-2 lg:px-2 md:px-4 px-5">
         <h1 className="lg:text-4xl md:text-3xl text-2xl leading-10 text-center font-semibold">
           Stay connected with your friends and family

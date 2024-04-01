@@ -9,8 +9,8 @@ import {
 import { validation } from "../utils/validations";
 import Input from "../components/Input";
 import axios from "axios";
-import DisplayError from "../components/DisplayError";
 import Logo from "../components/Logo";
+import { toast } from "react-toastify";
 
 export const action = async ({ request }) => {
   const data = await request.formData();
@@ -25,8 +25,6 @@ export const action = async ({ request }) => {
         password: data.get("password"),
         profile: "",
       });
-
-      console.log("res:", res);
 
       return redirect(
         "/login?message=User was registerd successfully,now login please!"
@@ -80,10 +78,25 @@ export default function Register() {
   const errorMessage = useActionData();
   const userRef = useRef();
   const navigation = useNavigation();
+  const toastId = useRef(null);
 
   useEffect(() => {
-    console.log(errorMessage);
+    notify(errorMessage && errorMessage.retrunedRes, "error");
   }, [errorMessage]);
+
+  // notify function
+  const notify = (data, type = null, position = null) => {
+    if (!toast.isActive(toastId.current)) {
+      toastId.current = toast(data, {
+        type: `${type || "default"}`,
+        position: `${position || "top-right"}`,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: false,
+        pauseOnFocusLoss: true,
+      });
+    }
+  };
 
   return (
     <main className="md:mx-6 mx-4 main-auth">
@@ -95,8 +108,6 @@ export default function Register() {
         <p className="font-semibold lg:text-lg md:text-base text-sm text-center">
           Create an account so you join our community
         </p>
-
-        <DisplayError error={errorMessage && errorMessage.retrunedRes} />
 
         <Form
           method="post"

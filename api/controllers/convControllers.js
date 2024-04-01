@@ -1,15 +1,69 @@
 const User = require("../models/User");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
+const { ObjectId } = require("mongodb");
 
-const getConv = async (req, res) => {
+const getConvs = async (req, res) => {
   const { userId } = req.user;
 
   try {
     const userConv = await User.findById(userId).populate("conv");
+
+    let convsList = userConv.conv.map((item) => item._id);
+
+    // for each user => get every conversation's (messages number - unread messages number - last message text - last message creation date)
+
+    const convsInfo = await Message.aggregate([
+      {
+        $match: {
+          conv: {
+            $in: convsList,
+          },
+        },
+      },
+      {
+        $sort: {
+          createdAt: 1,
+        },
+      },
+      {
+        $group: {
+          _id: "$conv",
+          lastMessage: {
+            $last: "$text",
+          },
+          lastDate: {
+            $last: "$createdAt",
+          },
+          messagesNum: {
+            $sum: 1,
+          },
+          unReadMessagesNum: {
+            $sum: {
+              $cond: {
+                if: {
+                  $in: [userConv._id, "$read"],
+                },
+                then: 0,
+                else: 1,
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    let convsAndInfo = userConv.conv.map((item) => {
+      let convInfo = convsInfo.find(
+        (info) => String(info._id) === String(item._id)
+      );
+
+      return Object.assign(item._doc, { info: convInfo });
+    });
+
     return res
       .status(200)
-      .json({ convs: userConv.conv, friends: userConv.friends });
+      .json({ convs: convsAndInfo || [], friends: userConv.friends });
   } catch (err) {
     return res
       .status(500)
@@ -17,6 +71,7 @@ const getConv = async (req, res) => {
   }
 };
 
+// create a new conversation
 const addConv = async (req, res) => {
   const { userId } = req.user;
   const { isPrivate, name, users } = req.body;
@@ -78,6 +133,7 @@ const addConv = async (req, res) => {
   }
 };
 
+// deleting existing conversation
 const deleteConv = async (req, res) => {
   const { userId } = req.user;
   const { convId } = req.params;
@@ -100,7 +156,7 @@ const deleteConv = async (req, res) => {
       }
 
       if (!conv.isPrivate) {
-        if (conv.admin !== userId) {
+        if (conv.admin.toString() !== userId) {
           await User.updateOne({ _id: userId }, { $pull: { conv: convId } });
 
           return res
@@ -130,6 +186,6 @@ const deleteConv = async (req, res) => {
   }
 };
 
-exports.getConv = getConv;
+exports.getConvs = getConvs;
 exports.addConv = addConv;
 exports.deleteConv = deleteConv;

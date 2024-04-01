@@ -5,13 +5,15 @@ import {
   redirect,
   useNavigation,
   useLoaderData,
+  useSearchParams,
 } from "react-router-dom";
 import Input from "../components/Input";
 import { loginValidation } from "../utils/validations";
 import axios from "axios";
-import { useEffect } from "react";
-import DisplayError from "../components/DisplayError";
+import { useEffect, useRef } from "react";
+
 import Logo from "../components/Logo";
+import { toast } from "react-toastify";
 
 export const loader = async ({ request }) => {
   return new URL(request.url).searchParams.get("message");
@@ -33,7 +35,6 @@ export const action =
           username: data.get("username"),
           password: data.get("password"),
         });
-
         setUsername(data.get("username"));
         setId(res.data["id"]);
         setConvs(res.data["conv"]);
@@ -72,6 +73,28 @@ export default function Login() {
   const errorMessage = useActionData();
   const navigation = useNavigation();
   const message = useLoaderData();
+  const toastId = useRef(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // to get the url message and notify it
+  useEffect(() => {
+    const message = searchParams.get("message");
+    notify((errorMessage && errorMessage.returnedRes) || message, "info");
+  }, [errorMessage]);
+
+  // notify function
+  const notify = (data, type = null, position = null) => {
+    if (!toast.isActive(toastId.current)) {
+      toastId.current = toast(data, {
+        type: `${type || "default"}`,
+        position: `${position || "top-right"}`,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: false,
+        pauseOnFocusLoss: true,
+      });
+    }
+  };
 
   return (
     <main className="md:mx-6 mx-4 main-auth">
@@ -84,10 +107,6 @@ export default function Login() {
         <p className="font-semibold lg:text-lg md:text-base text-sm text-center">
           Welcome back you’ve been missed!
         </p>
-
-        <DisplayError
-          error={(errorMessage && errorMessage.returnedRes) || message}
-        />
 
         <Form
           method="post"

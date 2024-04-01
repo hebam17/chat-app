@@ -6,7 +6,7 @@ export default function Logo({ color }) {
       <div
         className={`${
           color ? "text-" + color : "text-sky-600"
-        } font-bold flex gap-1 lg:m-5 md:m-4 m-2 fixed top-0 left-0`}
+        } font-bold flex gap-1`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

@@ -1,5 +1,4 @@
 import { createContext, useEffect, useState } from "react";
-import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 export const UserContext = createContext({});
 
@@ -8,7 +7,8 @@ export function UserContextProvider({ children }) {
   const [id, setId] = useState(null);
   const [convs, setConvs] = useState(null);
   const [friends, setFriends] = useState(null);
-  // const cookieString = document.cookie;
+  const [ws, setWs] = useState(null);
+
 
   // https://www.techradiant.com/2023/08/14/how-to-read-a-cookie-in-react-js/
   const readCookie = (name) => {
@@ -44,6 +44,8 @@ export function UserContextProvider({ children }) {
         setConvs,
         friends,
         setFriends,
+        ws,
+        setWs,
       }}
     >
       {children}

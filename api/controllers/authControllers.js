@@ -73,6 +73,57 @@ const login = async (req, res) => {
       return res.status(404).send({ error: "Username is not found!" });
     }
 
+    let convsList = user.conv.map((item) => item._id);
+
+    // for each user => get every conversation's (messages number - unread messages number - last message text - last message creation date)
+
+    const convsInfo = await Message.aggregate([
+      {
+        $match: {
+          conv: {
+            $in: convsList,
+          },
+        },
+      },
+      {
+        $sort: {
+          createdAt: 1,
+        },
+      },
+      {
+        $group: {
+          _id: "$conv",
+          lastMessage: {
+            $last: "$text",
+          },
+          lastDate: {
+            $last: "$createdAt",
+          },
+          messagesNum: {
+            $sum: 1,
+          },
+          unReadMessagesNum: {
+            $sum: {
+              $cond: {
+                if: {
+                  $in: [user._id, "$read"],
+                },
+                then: 0,
+                else: 1,
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    let convsAndInfo = user.conv.map((item) => {
+      let convInfo = convsInfo.find(
+        (info) => String(info._id) === String(item._id)
+      );
+      return Object.assign(item._doc, { info: convInfo });
+    });
+
     bcrypt
       .compare(password, user.password)
       .then((passwordCheck) => {
@@ -95,7 +146,7 @@ const login = async (req, res) => {
           .send({
             message: "Login Successfully",
             id: user._id,
-            conv: user.conv,
+            conv: convsAndInfo || [],
             friends: user.friends,
           });
       })

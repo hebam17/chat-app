@@ -43,12 +43,13 @@ export const generateOTP = async (email) => {
     if (status === 201) {
       // send mail with the OTP
       let text = `Your password reset code is ${code}`;
-      // await axios.post("/registerMail", {
-      //   username,
-      //   userEmail: email,
-      //   text,
-      //   subject: "Password reset code",
-      // });
+
+      await axios.post("/registerMail", {
+        username,
+        userEmail: email,
+        text,
+        subject: "Password reset code",
+      });
       return { code, username };
     }
   } catch (error) {

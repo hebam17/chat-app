@@ -1,1 +1,5 @@
-["PORT", "MONGO_URL", "JWT_SECRET", "CLIENT_URL", "EMAIL", "EMAIL_PASSWORD"]
+["PORT", "MONGO_URL", "JWT_SECRET", "CLIENT_URL"]
+
+// if you want to try reset password functionality
+
+["EMAIL", "EMAIL_PASSWORD"]

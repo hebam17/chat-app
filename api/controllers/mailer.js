@@ -3,6 +3,7 @@ const Mailgen = require("mailgen");
 
 require("dotenv").config();
 
+// provide a gmail to sent emails from
 const transporter = nodemailer.createTransport({
   service: "gmail",
   host: "smtp.gmail.com",

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { generateOTP, getUser, verifyOTP } from "../utils/apiRequests";
+import { verifyOTP } from "../utils/apiRequests";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import axios from "axios";
 import Logo from "./Logo";
 import DisplayError from "./DisplayError";
 
@@ -17,7 +16,6 @@ export default function PasswordRecovery() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(OTP);
     setError(null);
     try {
       const username = searchParams.get("username");

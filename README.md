@@ -56,7 +56,7 @@ npm install
 npm run dev
 ```
 
-2- create a .env file and fill the needed variables => mentioned in ** env-map.json **
+4- create a .env file and fill the needed variables => mentioned in ** env-map.json **
 
 Now you run the project
 

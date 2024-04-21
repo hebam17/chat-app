@@ -18,15 +18,16 @@ A real time chat app that you can create account into and start chatting with ot
 
 - Add users => to be contacts
 - Create group chats
-- Also delete contacts
+- delete contacts
 - auth
+- remove a single message
 
 ## upcoming features
 
 - More advanced auth system
 - profile page with the appility to upload photo
 - add the ability to block a user
-- add the ability to remove / update a single message
+- update a single message
 - etc
 
 ## Branches

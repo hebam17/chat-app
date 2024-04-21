@@ -181,7 +181,7 @@ export default function Chat() {
           }
           return prev;
         });
-      } else if (msg.sender === id && msg.file) {
+      } else if (msg.sender === id) {
         setMessages((prev) => [
           ...prev,
           {

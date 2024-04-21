@@ -1,10 +1,10 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import UserIdCard from "../components/UserIdCard";
 import axios from "axios";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { UserContext } from "../context/UserContext";
 import { unique } from "../utils/helpers";
 import TimeAgo from "javascript-time-ago";
+import ChatTopBar from "../components/ChatTopBar";
 
 const timeAgo = new TimeAgo("en-US");
 
@@ -27,17 +27,16 @@ export default function UserChat({
   // const [messages, setMessages] = useState([]);
   const msgRef = useRef();
   const [newMessage, setNewMessage] = useState("");
-
+  const [deleteMessage, setDeleteMessage] = useState(false);
   const { id, ws } = useContext(UserContext);
 
   // scroll to the bottom when both the current contact and the messages change
-  const scrollToElement = () => {
+  const scrollToElement = () =>
     msgRef.current?.scrollIntoView({ block: "center" });
-  };
 
   useEffect(() => {
     scrollToElement();
-  }, [[messages, currentContactId]]);
+  }, [currentContactId]);
 
   useEffect(() => {
     if (currentContactId && chatOpen) {
@@ -51,17 +50,12 @@ export default function UserChat({
         });
 
       if (currentContact.info?.unReadMessagesNum > 0) {
-        axios
-          .get(`/messages/setRead/${currentContactId}`)
-          .then((res) => {
-            // console.log("res:", res.data);
-          })
-          .catch((err) => {
-            setError(
-              err.response?.data?.error ||
-                "Something went wrong, refresh please!,or comeback later"
-            );
-          });
+        axios.put(`/messages/setRead/${currentContactId}`).catch((err) => {
+          setError(
+            err.response?.data?.error ||
+              "Something went wrong, refresh please!,or comeback later"
+          );
+        });
       }
     }
 
@@ -69,17 +63,12 @@ export default function UserChat({
 
     return () => {
       try {
-        axios
-          .get(`/messages/setRead/${currentContactId}`)
-          .then((res) => {
-            // console.log("res:", res.data);
-          })
-          .catch((err) => {
-            setError(
-              err.response?.data?.error ||
-                "Something went wrong, refresh please!,or comeback later"
-            );
-          });
+        axios.put(`/messages/setRead/${currentContactId}`).catch((err) => {
+          setError(
+            err.response?.data?.error ||
+              "Something went wrong, refresh please!,or comeback later"
+          );
+        });
       } catch (err) {
         setError(
           err.response?.data?.error ||
@@ -105,19 +94,6 @@ export default function UserChat({
           users: currentContact?.users,
         })
       );
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          _id: Date.now(),
-          text: newMessage,
-          conv: currentContactId,
-          file: null,
-          sender: id,
-          users: currentContact?.users,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
     }
 
     if (file) {
@@ -129,15 +105,6 @@ export default function UserChat({
           file,
         })
       );
-
-      axios
-        .get(`/messages/${currentContactId}`)
-        .then((res) => {
-          setMessages(res.data);
-        })
-        .catch(() => {
-          setError("Sorry an error occurred, please try again later!");
-        });
     }
 
     setNewMessage("");
@@ -157,59 +124,36 @@ export default function UserChat({
   }
 
   // remove message duplication from the message list
-  const dupesFreeMessages = unique(messages, "_id");
+  let dupesFreeMessages = unique(messages, "_id");
+
+  // handling deleting a message
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      const res = await axios.delete(
+        `/messages/${currentContactId}/${messageId}`
+      );
+      if (res.status === 200) {
+        setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+      }
+      // update the ui here
+    } catch (err) {
+      setError("Something went wrong, please try again later");
+    }
+  };
 
   return (
     <>
       {/* top bar */}
-      <div className="flex justify-between p-1 m-0 rounded-t-mdap md:rounded-l-none border border-b-2 border-gray-100 px-4 items-center">
-        <button
-          className="text-base font-bold hover:text-sky-500 cursor-pointer"
-          value="close chat"
-          onClick={() => {
-            toggleChat(false);
-            setCurrentContact(null);
-            setCurrentContactId(null);
-          }}
-        >
-          {/* <button type="button" onClick> */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-            className="w-6 h-6"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"
-            />
-          </svg>
-          {/* </button> */}
-        </button>
-        <div className="relative delete-conv cursor-pointer">
-          <button
-            type="button"
-            className="bg-red-400 px-3 py-1 text-white font-semibold italic rounded-lg"
-            onClick={() => handleRemoveConv(currentContact?.name)}
-          >
-            unFriend
-          </button>
-
-          <p
-            className={`bg-black text-white text-sm delete-tip absolute rounded-lg top-10 shadow-md left-0 px-2 py-1`}
-          >
-            unfollow and delete the entire chat
-          </p>
-        </div>
-
-        <UserIdCard
-          friends={getUser(currentContact)}
-          onlineUsers={onlineUsers}
-        />
-      </div>
+      <ChatTopBar
+        toggleChat={toggleChat}
+        setCurrentContact={setCurrentContact}
+        setCurrentContactId={setCurrentContactId}
+        handleRemoveConv={handleRemoveConv}
+        currentContact={currentContact}
+        getUser={getUser}
+        onlineUsers={onlineUsers}
+        setDeleteMessage={setDeleteMessage}
+      />
 
       {/* top bar end */}
 
@@ -234,33 +178,52 @@ export default function UserChat({
             }`}
           >
             <div
-              className={`text-left inline-block p-2 my-2 rounded-md text-md ${
+              className={`text-left inline-block px-3 pt-1 pb-2 my-2 rounded-md text-md ${
                 message.sender === id
                   ? "bg-sky-500 text-white"
                   : "bg-gray-100 text-gray-700"
               }`}
             >
-              <span
-                className={`text-gray-500 text-xs whitespace-nowrap ${
-                  message.sender === id ? " text-gray-200" : " text-gray-300"
-                }`}
-              >
-                {dateTimeinfo(message.createdAt)}
-              </span>
+              {/* datetime info / delete message */}
+              <div className="flex gap-2 justify-between items-center mb-2">
+                <span
+                  className={`text-gray-500 text-xs whitespace-nowrap ${
+                    message.sender === id ? " text-gray-200" : " text-gray-300"
+                  }`}
+                >
+                  {dateTimeinfo(message.createdAt)}
+                </span>
+
+                {deleteMessage && (
+                  <span
+                    className="text-black text-sm whitespace-nowrap cursor-pointer"
+                    onClick={() => handleDeleteMessage(message._id)}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-3 h-3"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18 18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </span>
+                )}
+              </div>
               <div>{message.text}</div>
               {message.file && (
                 <div>
-                  <a
-                    href={`${axios.defaults.baseURL}/uploads/${message.file}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <LazyLoadImage
-                      src={`http://localhost:8800/api/uploads/${message.file}`}
-                      className="max-h-[90vh] max-w-full object-cover"
-                      effect="blur"
-                    />
-                  </a>
+                  <LazyLoadImage
+                    src={`http://localhost:8800/api/uploads/${message.file}`}
+                    className="max-h-[90vh] max-w-full object-cover"
+                    effect="blur"
+                  />
                 </div>
               )}
             </div>
@@ -324,3 +287,5 @@ export default function UserChat({
     </>
   );
 }
+
+// react api docs

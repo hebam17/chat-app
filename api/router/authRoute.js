@@ -5,6 +5,14 @@ const { Auth, localOTP } = require("../middleware/userAuth");
 const registerMail = require("../controllers/mailer");
 const { check } = require("express-validator");
 
+// GET ROUTES
+router.route("/profile/:id").get(Auth, authControllers.getUser); //profile
+
+router.route("/createResetSession").get(authControllers.createResetSession); //reset all variables
+// get all people from db
+router.route("/users").get(Auth, authControllers.getAllUsers);
+router.route("/refresh").get(authControllers.refresh); //verify generated OTP
+
 // POST ROUTES
 router
   .route("/register")
@@ -46,13 +54,6 @@ router.route("/logout").post(Auth, authControllers.logout); //logout user
 
 router.route("/generateOTP").post(localOTP, authControllers.generateOTP); //generate random OTP
 router.route("/verifyOTP").post(authControllers.verifyOTP); //verify generated OTP
-
-// GET ROUTES
-router.route("/profile").get(authControllers.getUser); //profile
-
-router.route("/createResetSession").get(authControllers.createResetSession); //reset all variables
-// get all people from db
-router.route("/users").post(Auth, authControllers.getAllUsers);
 
 // PUT ROUTES
 router.route("/updateuser").put(Auth, authControllers.updateUser); //update user profile

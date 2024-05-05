@@ -1,5 +1,11 @@
-["PORT", "MONGO_URL", "JWT_SECRET", "CLIENT_URL"]
-
-// if you want to try reset password functionality
-
-["EMAIL", "EMAIL_PASSWORD"]
+{
+  "main-vars": [
+    "PORT",
+    "MONGO_URL",
+    "JWT_SECRET",
+    "CLIENT_URL",
+    "ACCESS_TOKEN_SECRET",
+    "REFRESH_TOKEN_SECRET"
+  ],
+  "reset_password_vars": ["EMAIL", "EMAIL_PASSWORD"]
+}

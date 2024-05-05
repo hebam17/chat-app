@@ -3,9 +3,12 @@ require("dotenv").config();
 
 const Auth = (req, res, next) => {
   try {
-    const token = req.cookies?.token;
-    if (token) {
-      const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    const auth = req.headers.authorization || req.headers.Authorization;
+    console.log("auth:", auth);
+    if (auth.startsWith("Bearer ")) {
+      const token = auth.split(" ")[1];
+
+      const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
       req.user = decodedToken;
 
@@ -29,3 +32,5 @@ const localOTP = (req, res, next) => {
 
 exports.localOTP = localOTP;
 exports.Auth = Auth;
+
+// 4:33

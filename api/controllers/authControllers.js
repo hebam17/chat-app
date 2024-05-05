@@ -45,15 +45,10 @@ const register = async (req, res) => {
     });
 
     // not sending token because the user will be redirected to the login page after registeration
-    return (
-      res
-        // .cookie("token", token, { sameSite: "none", secure: true })
-        .status(201)
-        .send({
-          message: "User Register Successfully",
-          id: newUser._id,
-        })
-    );
+    return res.status(201).send({
+      message: "User Register Successfully",
+      id: newUser._id,
+    });
   } catch (err) {
     return res.status(500).send(err.message);
   }
@@ -73,8 +68,114 @@ const login = async (req, res) => {
       return res.status(404).send({ error: "Username is not found!" });
     }
 
-    let convsList = user.conv.map((item) => item._id);
+    bcrypt
+      .compare(password, user.password)
+      .then(async (passwordCheck) => {
+        if (!passwordCheck)
+          return res.status(404).send({ error: "Password doesn't match" });
 
+        const accessToken = jwt.sign(
+          {
+            userId: user._id,
+            username: user.username,
+          },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: "2m" }
+        );
+
+        const refreshToken = jwt.sign(
+          {
+            userId: user._id,
+            username: user.username,
+          },
+          process.env.REFRESH_TOKEN_SECRET,
+          { expiresIn: "24h" }
+        );
+
+        return res
+          .status(200)
+          .cookie("token", refreshToken, {
+            sameSite: "none",
+            secure: true,
+            httpOnly: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000, // cookie expire in 1day like the refresh token
+          })
+          .json({ message: "Login Successfully", accessToken });
+      })
+      .catch((err) =>
+        res.status(400).send({ error: "Password doesn't match" })
+      );
+  } catch (err) {
+    return res
+      .status(500)
+      .send({ error: "Sorry, an error occured, please try again later!" });
+  }
+};
+
+const refresh = async (req, res) => {
+  const cookies = req.cookies;
+  if (!cookies?.token) return res.status(401).send({ message: "Unauthorized" });
+
+  const refreshToken = cookies.token;
+
+  if (refreshToken) {
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+      {},
+      async (err, userData) => {
+        if (err) return res.status(403).send({ error: "Forbidden" });
+
+        const user = await User.findOne({
+          username: userData.username,
+        });
+
+        if (!user) return res.status(401).send({ error: "Unauthorized" });
+
+        const accessToken = jwt.sign(
+          {
+            userId: user._id,
+            username: user.username,
+          },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: "2m" }
+        );
+        return res.json({ accessToken });
+      }
+    );
+  } else {
+    return res
+      .status(401)
+      .send({ error: "you are not logged in, please login first" });
+  }
+};
+
+const logout = (req, res) => {
+  const cookies = req.cookies;
+  if (!cookies?.token) return res.status(204);
+  res
+    .status(200)
+    .clearCookie("token", {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true,
+    })
+    .json("ok");
+};
+
+const getUser = async (req, res) => {
+  const { username } = req.user;
+  const { id: profileId } = req.params;
+
+  // check if user already exist
+  const user = await User.findOne({ username }).populate("conv");
+  if (!user) {
+    return res.status(404).send({ error: "User is not found!" });
+  }
+
+  if (userId !== profileId) {
+    return res.status(200).send({ user });
+  } else {
     // for each user => get every conversation's (messages number - unread messages number - last message text - last message creation date)
 
     const convsInfo = await Message.aggregate([
@@ -124,57 +225,11 @@ const login = async (req, res) => {
       return Object.assign(item._doc, { info: convInfo });
     });
 
-    bcrypt
-      .compare(password, user.password)
-      .then((passwordCheck) => {
-        if (!passwordCheck)
-          return res.status(404).send({ error: "Password doesn't match" });
-
-        // Create jwt token
-        const token = jwt.sign(
-          {
-            userId: user._id,
-            username: user.username,
-          },
-          process.env.JWT_SECRET,
-          { expiresIn: "24h" }
-        );
-
-        return res
-          .status(200)
-          .cookie("token", token, { sameSite: "none", secure: true })
-          .send({
-            message: "Login Successfully",
-            id: user._id,
-            conv: convsAndInfo || [],
-            friends: user.friends,
-          });
-      })
-      .catch((err) =>
-        res.status(400).send({ error: "Password doesn't match" })
-      );
-  } catch (err) {
-    return res
-      .status(500)
-      .send({ error: "Sorry, an error occured, please try again later!" });
-  }
-};
-
-const logout = (req, res) => {
-  res.cookie("token", "", { sameSite: "none", secure: true }).json("ok");
-};
-
-const getUser = (req, res) => {
-  const token = req.cookies?.token;
-  if (token) {
-    jwt.verify(token, process.env.JWT_SECRET, {}, (err, userData) => {
-      if (err) return res.status(400).send({ error: err.message });
-      return res.send(userData);
+    res.status(200).send({
+      id: user._id,
+      conv: convsAndInfo || [],
+      friends: user.friends,
     });
-  } else {
-    return res
-      .status(401)
-      .send({ error: "you are not logged in, please login first" });
   }
 };
 
@@ -307,6 +362,7 @@ const getAllUsers = async (req, res) => {
 
 exports.register = register;
 exports.login = login;
+exports.refresh = refresh;
 exports.logout = logout;
 exports.getUser = getUser;
 exports.updateUser = updateUser;

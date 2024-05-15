@@ -3,9 +3,9 @@ import { UserContext } from "../context/UserContext";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 export default function AuthRequired() {
-  const { username } = useContext(UserContext);
   const location = useLocation();
   const pathname = location.pathname;
+  const { username } = useContext(UserContext);
 
   if (username) return <Outlet />;
 

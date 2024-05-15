@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 export const UserContext = createContext({});
 
 export function UserContextProvider({ children }) {
@@ -8,32 +9,31 @@ export function UserContextProvider({ children }) {
   const [convs, setConvs] = useState(null);
   const [friends, setFriends] = useState(null);
   const [ws, setWs] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-
-  // https://www.techradiant.com/2023/08/14/how-to-read-a-cookie-in-react-js/
-  const readCookie = (name) => {
-    const cookieString = document.cookie;
-    const cookies = cookieString.split("; ");
-
-    for (const cookie of cookies) {
-      const [cookieName, cookieValue] = cookie.split("=");
-      const token = cookieName === name && cookieValue;
-      if (token) return jwtDecode(token);
-    }
-
-    return null; // Cookie not found
-  };
-
-  const cookieValue = readCookie("token");
   useEffect(() => {
-    // get username and id from cookie and set the context values
-    if (cookieValue !== null) {
-      setId(cookieValue?.userId);
-      setUsername(cookieValue?.username);
-    }
-  }, [cookieValue]);
+    const getAccessToken = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get("/refresh");
+        const { userId, username } = jwtDecode(res.data.accessToken);
+        setAccessToken(res.data.accessToken);
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${res.data.accessToken}`;
+        setId(userId);
+        setUsername(username);
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+      }
+    };
 
-  return (
+    if (!accessToken) getAccessToken();
+  }, []);
+
+  let content = (
     <UserContext.Provider
       value={{
         username,
@@ -46,9 +46,13 @@ export function UserContextProvider({ children }) {
         setFriends,
         ws,
         setWs,
+        accessToken,
+        setAccessToken,
       }}
     >
       {children}
     </UserContext.Provider>
   );
+
+  if (!loading) return content;
 }

@@ -10,7 +10,17 @@ export default function ChatTopBar({
   getUser,
   onlineUsers,
   setDeleteMessage,
+  messagesLength,
+  setError,
 }) {
+  const deleteMessages = () => {
+    if (messagesLength !== 0) {
+      setDeleteMessage((prev) => !prev);
+    } else {
+      setError("You have no messages in this conversation");
+    }
+  };
+
   return (
     <div className="flex justify-between p-1 m-0 rounded-t-mdap md:rounded-l-none border border-b-2 border-gray-100 px-4 items-center">
       <button
@@ -45,7 +55,7 @@ export default function ChatTopBar({
           <button
             type="button"
             className="bg-red-400 px-3 py-1 text-white font-semibold italic rounded-lg"
-            onClick={() => setDeleteMessage((prev) => !prev)}
+            onClick={deleteMessages}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

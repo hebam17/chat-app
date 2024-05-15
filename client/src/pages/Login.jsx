@@ -14,6 +14,7 @@ import { useEffect, useRef } from "react";
 
 import Logo from "../components/Logo";
 import { toast } from "react-toastify";
+import { jwtDecode } from "jwt-decode";
 
 export const loader = async ({ request }) => {
   return new URL(request.url).searchParams.get("message");
@@ -24,7 +25,7 @@ export const action =
   async ({ request }) => {
     const data = await request.formData();
     let ValidationErrors = loginValidation(data);
-    const { setUsername, setId, setConvs, setFriends } = userContextData;
+    const { setAccessToken, setId, setUsername } = userContextData;
 
     const pathname =
       new URL(request.url).searchParams.get("redirectTo") || "/chat";
@@ -35,10 +36,16 @@ export const action =
           username: data.get("username"),
           password: data.get("password"),
         });
-        setUsername(data.get("username"));
-        setId(res.data["id"]);
-        setConvs(res.data["conv"]);
-        setFriends(res.data["friends"]);
+        if (res.data.accessToken) {
+          setAccessToken(res.data.accessToken);
+          axios.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${res.data.accessToken}`;
+          const { userId, username } = jwtDecode(res.data.accessToken);
+          setId(userId);
+          setUsername(username);
+        }
+
         return redirect(`${pathname}?message=User logged in successfully`);
       } catch (error) {
         return {

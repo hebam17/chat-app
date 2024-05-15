@@ -11,13 +11,22 @@ export const unique = (arr, by) => {
 };
 
 // log user out
-export const logout = async (setWs, setId, setUsername) => {
+export const logout = async (
+  setWs,
+  setId,
+  setUsername,
+  setAccessToken,
+  setError = null
+) => {
   try {
     await axios.post("/logout");
     setWs(null);
     setId(null);
     setUsername(null);
+    setAccessToken(null);
   } catch (error) {
-    console.log(error.response.data.error);
+    setError
+      ? setError(error.response.data.error)
+      : console.log(error.response.data.error);
   }
 };

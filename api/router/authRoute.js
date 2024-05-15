@@ -10,7 +10,7 @@ router.route("/profile/:id").get(Auth, authControllers.getUser); //profile
 
 router.route("/createResetSession").get(authControllers.createResetSession); //reset all variables
 // get all people from db
-router.route("/users").get(Auth, authControllers.getAllUsers);
+router.route("/users").post(Auth, authControllers.getAllUsers);
 router.route("/refresh").get(authControllers.refresh); //verify generated OTP
 
 // POST ROUTES
@@ -47,8 +47,6 @@ router
 router.route("/login").post(authControllers.login); //login user
 
 router.route("/registerMail").post(registerMail); //send the email
-
-router.route("/authentication").post(authControllers.authenticate); //authenticate user
 
 router.route("/logout").post(Auth, authControllers.logout); //logout user
 

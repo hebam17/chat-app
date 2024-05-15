@@ -20,23 +20,14 @@ export default function UserChat({
   setError,
   messages,
   setMessages,
-  setContact,
   chatOpen,
   updateInfo,
+  msgRef,
+  filteredUsers,
 }) {
-  // const [messages, setMessages] = useState([]);
-  const msgRef = useRef();
   const [newMessage, setNewMessage] = useState("");
   const [deleteMessage, setDeleteMessage] = useState(false);
   const { id, ws } = useContext(UserContext);
-
-  // scroll to the bottom when both the current contact and the messages change
-  const scrollToElement = () =>
-    msgRef.current?.scrollIntoView({ block: "center" });
-
-  useEffect(() => {
-    scrollToElement();
-  }, [currentContactId]);
 
   useEffect(() => {
     if (currentContactId && chatOpen) {
@@ -111,6 +102,10 @@ export default function UserChat({
     scrollToElement();
   };
 
+  const scrollToElement = () => {
+    msgRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  };
+
   // send pics
   function sendFile(e) {
     const reader = new FileReader();
@@ -153,6 +148,8 @@ export default function UserChat({
         getUser={getUser}
         onlineUsers={onlineUsers}
         setDeleteMessage={setDeleteMessage}
+        messagesLength={messages.length}
+        setError={setError}
       />
 
       {/* top bar end */}
@@ -230,7 +227,12 @@ export default function UserChat({
           </div>
         ))}
 
-        <div id="anchor" className="h-2" ref={msgRef}></div>
+        <div
+          id="anchor"
+          className="bg-red-500 border-black"
+          style={{ minHeight: "1rem" }}
+          ref={msgRef}
+        ></div>
       </div>
 
       {/* messages end */}

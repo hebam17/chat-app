@@ -4,7 +4,6 @@ require("dotenv").config();
 const Auth = (req, res, next) => {
   try {
     const auth = req.headers.authorization || req.headers.Authorization;
-    console.log("auth:", auth);
     if (auth.startsWith("Bearer ")) {
       const token = auth.split(" ")[1];
 
@@ -32,5 +31,3 @@ const localOTP = (req, res, next) => {
 
 exports.localOTP = localOTP;
 exports.Auth = Auth;
-
-// 4:33

@@ -34,52 +34,39 @@ function App() {
     createRoutesFromElements(
       <Route errorElement={<ErrorMessage />}>
         <Route path="/" element={<Home />} errorElement={<ErrorMessage />} />
-
         <Route element={<AuthRequired />}>
           <Route
             path="/chat"
             element={<Chat />}
             loader={chatLoader(userContextData)}
-            errorElement={<ErrorMessage />}
           />
-          <Route
-            path="/contact/:username"
-            element={<Contact />}
-            errorElement={<ErrorMessage />}
-          />
+          <Route path="/contact/:username" element={<Contact />} />
         </Route>
         <Route element={<AuthDenied />}>
           <Route
             path="/register"
             element={<Register />}
             action={registerAction}
-            errorElement={<ErrorMessage />}
           />
           <Route
             path="/login"
             element={<Login />}
             loader={loginLoader}
             action={loginAction(userContextData)}
-            errorElement={<ErrorMessage />}
           />
           <Route
             path="/recovery-email-send"
             element={<RecoveryEmailSend />}
             action={recoveryEmailSendAction}
-            errorElement={<ErrorMessage />}
           />
-          <Route
-            path="/recovery"
-            element={<PasswordRecovery />}
-            errorElement={<ErrorMessage />}
-          />
+          <Route path="/recovery" element={<PasswordRecovery />} />
           <Route
             path="/reset-password"
             element={<ResetPassword />}
             action={resetPasswordAction}
-            errorElement={<ErrorMessage />}
           />
         </Route>
+
         <Route path="*" element={<PageNotFound />} />
       </Route>
     )

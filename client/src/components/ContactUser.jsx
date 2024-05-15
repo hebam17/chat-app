@@ -25,6 +25,7 @@ export default function ContactUser({
   toggleChat,
   createGroup = false,
   profile = "",
+  msgRef,
   info = {},
 }) {
   const [inGroup, setInGroup] = useState(false);
@@ -46,17 +47,25 @@ export default function ContactUser({
     return message.length > 25 ? message.slice(0, 20) + "..." : message;
   };
 
+  const scrollToElement = () => {
+    msgRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  };
+
+  const handleClick = () => {
+    if (!createGroup && conv) {
+      setContact(userId);
+      toggleChat(true);
+
+      scrollToElement();
+    }
+  };
+
   return (
     <div
       className={`flex relative justify-between gap-3 p-2 my-1 rounded-lg border-1 border-gray-200 cursor-pointer bg-white ${
         selected ? "bg-sky-100" : ""
       }`}
-      onClick={() => {
-        if (!createGroup && conv) {
-          setContact(userId);
-          toggleChat(true);
-        }
-      }}
+      onClick={handleClick}
     >
       <div>
         <Avatar online={online} profile={profile} isCard={true} />

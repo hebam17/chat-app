@@ -1,18 +1,9 @@
 import axios from "axios";
 
-// authenticate function
-export const authenticate = async (username) => {
-  try {
-    return await axios.post("/authenticate", { username });
-  } catch (error) {
-    throw new Error(error.response.data.error);
-  }
-};
-
 // getting user details
-export const getUser = async () => {
+export const getUser = async (userId) => {
   try {
-    const { data } = await axios.get("/profile");
+    const { data } = await axios.get(`/profile/${userId}`);
     return data;
   } catch (error) {
     throw new Error(error.response.data.error);

@@ -4,7 +4,8 @@ import { useContext } from "react";
 import { logout } from "../utils/helpers";
 
 export default function Home() {
-  const { username, setWs, setId, setUsername } = useContext(UserContext);
+  const { username, setWs, setId, setUsername, setAccessToken } =
+    useContext(UserContext);
   return (
     <div className="flex flex-col h-screen home-bg m-0">
       {/* header */}
@@ -13,7 +14,7 @@ export default function Home() {
           <div className="flex gap-2 sm:justify-end justify-around">
             <button
               type="button"
-              onClick={() => logout(setWs, setId, setUsername)}
+              onClick={() => logout(setWs, setId, setUsername, setAccessToken)}
               value="logout"
               className="font-semibold inline-block mt-4 mr-4 lg:text-lg text-base hover:text-sky-500"
             >

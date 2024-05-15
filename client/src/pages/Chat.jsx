@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 import { useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
 import UserChat from "./UserChat";
+import { jwtDecode } from "jwt-decode";
 
 export const loader =
   (userContextData) =>
@@ -36,10 +37,7 @@ export const loader =
           data: data,
         };
       } catch (err) {
-        setError(
-          err.response?.data?.error ||
-            "Something went wrong, refresh please!,or comeback later"
-        );
+        console.log(err.response?.data?.error);
       }
     } else {
       convs.forEach((conv) => {
@@ -76,6 +74,8 @@ export default function Chat() {
     setFriends,
     ws,
     setWs,
+    setAccessToken,
+    accessToken,
   } = useContext(UserContext);
   const [currentContactId, setCurrentContactId] = useState(null);
   const [currentContact, setCurrentContact] = useState(null);
@@ -89,7 +89,7 @@ export default function Chat() {
   const [searchUser, setSearchUser] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [chatOpen, setChatOpen] = useState(false);
-  const msgRef = useRef();
+  const msgRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const toastId = useRef(null);
 
@@ -100,6 +100,38 @@ export default function Chat() {
     setConvs(data.convs);
     data.friends && setFriends(data.friends);
     notify(message, "success");
+  }, []);
+
+  // set timer to get the new access token every 15 minutes
+  useEffect(() => {
+    if (!accessToken) {
+      axios.get("/refresh").then((res) => {
+        const { userId, username } = jwtDecode(res.data.accessToken);
+        setId(userId);
+        setUsername(username);
+      });
+    }
+    let interval = null;
+
+    interval = setInterval(async () => {
+      try {
+        const result = await axios.get("/refresh");
+        if (result.status !== 200) {
+          clearInterval(interval);
+          return;
+        }
+        setAccessToken(result.data.accessToken);
+        axios.defaults.headers.common[
+          "Authorization"
+        ] = `Bearer ${result.data.accessToken}`;
+      } catch (err) {
+        clearInterval(interval);
+      }
+    }, 2 * 1000 * 60);
+
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -212,7 +244,7 @@ export default function Chat() {
   // handle adding new user to the conversations list // private conversation between this user and the current user
   const handleAdding = async (username, contactname, userId, contactId) => {
     try {
-      if (!(userId === contactId)) {
+      if (userId !== contactId) {
         const newConv = await axios.post("/convs/addConv", {
           isPrivate: true,
           name: `${username}-${contactname}`,
@@ -487,7 +519,9 @@ export default function Chat() {
 
             <button
               type="button"
-              onClick={() => logout(setWs, setId, setUsername)}
+              onClick={() =>
+                logout(setWs, setId, setUsername, setAccessToken, setError)
+              }
               value="logout"
               className="p-1 text-white font-semibold italic border-b-2 border-white"
             >
@@ -647,6 +681,8 @@ export default function Chat() {
                 chatOpen={chatOpen}
                 setContact={setContact}
                 updateInfo={updateInfo}
+                msgRef={msgRef}
+                filteredUsers={filteredUsers}
               />
             </div>
           )}

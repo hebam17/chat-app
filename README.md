@@ -21,10 +21,10 @@ A real time chat app that you can create account into and start chatting with ot
 - delete contacts
 - auth
 - remove a single message
+- newAuth => new branch with more advanced authentication - deal with auth using FRESHTOKEN, ACCESSTOKEN and http only cookies with no local storage
 
 ## upcoming features
 
-- More advanced auth system
 - profile page with the appility to upload photo
 - add the ability to block a user
 - update a single message
@@ -33,7 +33,7 @@ A real time chat app that you can create account into and start chatting with ot
 ## Branches
 
 - main => will have all these features
-- authjwt => will have a more advanced JWT auth system => comming
+- newAuth => more advanced JWT auth system
 
 ## Getting started
 
